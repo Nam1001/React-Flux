@@ -5,10 +5,15 @@
     "module": "dist/index.esm.js",
     "types": "dist/index.d.ts",
     "scripts": {
-        "build": "rollup -c",
-        "test": "vitest run"
+        "test": "vitest run --coverage && npx tsx benchmarks/run.ts",
+        "test:watch": "vitest --coverage",
+        "test:coverage": "vitest run --coverage",
+        "test:bench": "npx tsx benchmarks/run.ts",
+        "lint": "eslint src --ext .ts",
+        "build": "rollup -c"
     },
     "devDependencies": {
-        "@vitest/coverage-v8": "^1.6.1"
+        "@vitest/coverage-v8": "^1.6.1",
+        "tsx": "^4.21.0"
     }
 }
