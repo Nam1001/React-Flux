@@ -1,0 +1,34 @@
+name: Test by Commit
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit_sha:
+        description: 'Commit SHA to run tests against'
+        required: true
+        type: string
+
+jobs:
+  test-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout specific commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.commit_sha }}
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - name: Use Node.js 18
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run tests against commit ${{ github.event.inputs.commit_sha }}
+        run: pnpm --filter reactflux test
