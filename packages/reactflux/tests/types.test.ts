@@ -20,13 +20,13 @@ describe('TypeScript Type Inference', () => {
     it('prevents invalid updates (compile time)', () => {
         const store = createStore({ count: 0, text: 'hello' });
 
-        // @ts-expect-error
+        // @ts-expect-error — count must be a number, assigning string should fail
         store.setState({ count: 'string' });
 
-        // @ts-expect-error
+        // @ts-expect-error — 'unknown' is not a key of the store definition
         store.setState({ unknown: true });
 
-        // @ts-expect-error
-        store.setState((s) => ({ text: 42 }));
+        // @ts-expect-error — text must be string, assigning number should fail
+        store.setState(() => ({ text: 42 }));
     });
 });

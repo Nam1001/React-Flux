@@ -31,7 +31,7 @@ export function createStore<T extends object>(definition: StoreDefinition<T>): S
             for (const key in updates) {
                 if (Object.prototype.hasOwnProperty.call(updates, key)) {
                     // Assign to proxy to trigger proxy 'set' traps which handles notification.
-                    proxyState[key as keyof T] = updates[key as keyof typeof updates] as any;
+                    proxyState[key as keyof T] = updates[key as keyof typeof updates] as T[keyof T];
                 }
             }
         },

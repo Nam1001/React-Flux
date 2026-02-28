@@ -7,18 +7,18 @@ describe('4.1 Volume & Scale', () => {
         ['1000', 1000],
         ['10000', 10000]
     ])('Store with %s keys — all update correctly', (_, count) => {
-        const initial = Array.from({ length: count as number }).reduce((acc: any, _, i) => { acc[`k${i}`] = 0; return acc; }, {});
+        const initial = Array.from({ length: count as number }).reduce((acc: Record<string, number>, _, i) => { acc[`k${i}`] = 0; return acc; }, {});
         const store = createStore(initial);
-        store.setState({ k1: 1, k99: 1 } as any);
+        store.setState({ k1: 1, k99: 1 } as unknown as Partial<typeof initial>);
         expect(store.getState().k1).toBe(1);
     });
 
     it('Store with 100 nested objects — all tracked correctly', () => {
-        const initial = Array.from({ length: 100 }).reduce((acc: any, _, i) => { acc[`k${i}`] = { val: 0 }; return acc; }, {});
+        const initial = Array.from({ length: 100 }).reduce((acc: Record<string, { val: number }>, _, i) => { acc[`k${i}`] = { val: 0 }; return acc; }, {});
         const store = createStore(initial);
         const l = vi.fn();
         store.subscribe(l);
-        store.setState({ k50: { val: 1 } } as any);
+        store.setState({ k50: { val: 1 } } as unknown as Partial<typeof initial>);
         expect(l).toHaveBeenCalled();
     });
 
@@ -67,7 +67,7 @@ describe('4.1 Volume & Scale', () => {
             const u = store.subscribe(l);
             u();
         }
-        expect((store as any).listeners?.size || 0).toBe(0);
+        expect((store as Record<string, { size?: number }>).listeners?.size || 0).toBe(0);
     });
 });
 
@@ -98,7 +98,7 @@ describe('4.2 Performance Assertions', () => {
         const store = createStore({ a: { b: { c: 1 } } });
         const start = performance.now();
         for (let i = 0; i < 100000; i++) {
-            const val = store.getState().a.b.c;
+            void store.getState().a.b.c;
         }
         const duration = performance.now() - start;
         expect(duration / 100000).toBeLessThan(0.1);
@@ -116,10 +116,10 @@ describe('4.2 Performance Assertions', () => {
     });
 
     it('Store with 1000 keys — setState under 5ms', () => {
-        const initial = Array.from({ length: 1000 }).reduce((acc: any, _, i) => { acc[`k${i}`] = 0; return acc; }, {});
+        const initial = Array.from({ length: 1000 }).reduce((acc: Record<string, number>, _, i) => { acc[`k${i}`] = 0; return acc; }, {});
         const store = createStore(initial);
         const start = performance.now();
-        store.setState({ k500: 1 } as any);
+        store.setState({ k500: 1 } as unknown as Partial<typeof initial>);
         expect(performance.now() - start).toBeLessThan(20);
     });
 
@@ -138,7 +138,7 @@ describe('4.3 Memory Safety', () => {
         for (let i = 0; i < 10000; i++) {
             store.subscribe(() => { })();
         }
-        expect((store as any).listeners?.size || 0).toBe(0);
+        expect((store as Record<string, { size?: number }>).listeners?.size || 0).toBe(0);
     });
 
     it('No memory leak after 10000 setState calls', () => {
@@ -151,17 +151,17 @@ describe('4.3 Memory Safety', () => {
 
     it('Unsubscribed listeners are garbage collectable (WeakRef test)', async () => {
         const store = createStore({ a: 1 });
-        let l: any = () => { };
+        let l: (() => void) | null = () => { };
         const u = store.subscribe(l);
         u();
         l = null;
-        expect((store as any).listeners?.size || 0).toBe(0);
+        expect((store as Record<string, { size?: number }>).listeners?.size || 0).toBe(0);
     });
 
     it('Removed nested objects are garbage collectable', () => {
         const store = createStore({ a: { b: 1 } });
-        store.setState({ a: { c: 2 } } as any);
-        expect((store.getState() as any).a.b).toBeUndefined();
+        store.setState({ a: { c: 2 } } as unknown as Partial<{ a: { b: number } }>);
+        expect(((store.getState() as Record<string, Record<string, number>>).a).b).toBeUndefined();
     });
 
     it('Creating and discarding 1000 stores leaves no leak', () => {
@@ -211,11 +211,11 @@ describe('4.4 Concurrency & Edge Cases', () => {
 
     it('unsubscribe called inside a listener — safe', () => {
         const store = createStore({ a: 1 });
-        let unsub: any;
         const l1 = vi.fn(() => {
-            if (unsub) unsub();
+            unsub();
         });
-        unsub = store.subscribe(l1);
+        const unsub = store.subscribe(l1);
+        expect(unsub).toBeDefined();
         store.setState({ a: 2 });
         store.setState({ a: 3 });
         expect(l1).toHaveBeenCalledTimes(1);
@@ -238,9 +238,9 @@ describe('4.4 Concurrency & Edge Cases', () => {
     });
 
     it('setState with circular reference object — throws clear error or handles gracefully', () => {
-        const store = createStore({ obj: {} as any });
-        const a: any = {};
-        const b: any = { a };
+        const store = createStore({ obj: {} as Record<string, unknown> });
+        const a: Record<string, unknown> = {};
+        const b: Record<string, unknown> = { a };
         a.b = b;
         expect(() => {
             store.setState({ obj: a });
@@ -260,7 +260,7 @@ describe('4.4 Concurrency & Edge Cases', () => {
     });
 
     it('Very deeply nested object (50 levels) — no stack overflow', () => {
-        let deep: any = { val: 1 };
+        let deep: Record<string, unknown> | { val: number } = { val: 1 };
         for (let i = 0; i < 50; i++) deep = { child: deep };
         const store = createStore({ deep });
         expect(() => store.setState({ deep })).not.toThrow();

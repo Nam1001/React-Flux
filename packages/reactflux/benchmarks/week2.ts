@@ -44,7 +44,7 @@ async function run() {
     // Nested read (3 levels deep) (< 0.1ms)
     const nestedStore = createStore({ root: { level1: { level2: { val: 42 } } } });
     results.push(measure('Nested read (3 levels deep)', () => {
-        const v = nestedStore.getState().root.level1.level2.val;
+        void nestedStore.getState().root.level1.level2.val;
     }, 1000000));
 
     // Subscribe + Unsubscribe cycle (< 0.1ms)

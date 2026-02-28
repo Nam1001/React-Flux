@@ -3,14 +3,14 @@ import { createStateProxy } from '../src/proxy';
 
 describe('2.1 Flat State Proxy Tracking', () => {
     it.each([
-        ['string', { a: 'str' }, 'a', 'new-str'],
-        ['number', { a: 1 }, 'a', 2],
-        ['boolean', { a: true }, 'a', false],
-        ['null', { a: null }, 'a', 'val'],
-        ['undefined', { a: undefined as any }, 'a', 'val']
-    ])('Reading %s key returns correct value', (_, initial, key, __) => {
-        const proxy = createStateProxy(initial, vi.fn());
-        expect((proxy as any)[key]).toBe((initial as any)[key]);
+        ['string', { a: 'str' }, 'a'],
+        ['number', { a: 1 }, 'a'],
+        ['boolean', { a: true }, 'a'],
+        ['null', { a: null }, 'a'],
+        ['undefined', { a: undefined as unknown }, 'a']
+    ])('Reading %s key returns correct value', (_, initial, key) => {
+        const proxy = createStateProxy(initial as Record<string, unknown>, vi.fn());
+        expect((proxy as Record<string, unknown>)[key]).toBe((initial as Record<string, unknown>)[key]);
     });
 
     it.each([
@@ -24,8 +24,8 @@ describe('2.1 Flat State Proxy Tracking', () => {
         ['empty string to a key', { a: 'old' }, 'a', '']
     ])('Writing %s notifies subscribers', (_, initial, key, newValue) => {
         const listener = vi.fn();
-        const proxy = createStateProxy(initial, listener);
-        (proxy as any)[key] = newValue;
+        const proxy = createStateProxy(initial as Record<string, unknown>, listener);
+        (proxy as Record<string, unknown>)[key] = newValue;
         expect(listener).toHaveBeenCalledTimes(1);
     });
 
@@ -47,16 +47,21 @@ describe('2.1 Flat State Proxy Tracking', () => {
 
     it('Proxy does not expose internal implementation details', () => {
         const proxy = createStateProxy({ a: 1 }, vi.fn());
-        expect((proxy as any).__proxy).toBeUndefined();
+        expect((proxy as Record<string, unknown>).__proxy).toBeUndefined();
     });
 });
 
 describe('2.2 Nested Object Tracking', () => {
     it.each([
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         [1, { l1: { val: 1 } }, (p: any) => p.l1.val],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         [2, { l1: { l2: { val: 2 } } }, (p: any) => p.l1.l2.val],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         [3, { l1: { l2: { l3: { val: 3 } } } }, (p: any) => p.l1.l2.l3.val],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         [5, { l1: { l2: { l3: { l4: { l5: { val: 5 } } } } } }, (p: any) => p.l1.l2.l3.l4.l5.val],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         [10, { l1: { l2: { l3: { l4: { l5: { l6: { l7: { l8: { l9: { l10: { val: 10 } } } } } } } } } } }, (p: any) => p.l1.l2.l3.l4.l5.l6.l7.l8.l9.l10.val]
     ])('Reading nested key (%i levels) returns correct value', (val, initial, readFn) => {
         const proxy = createStateProxy(initial, vi.fn());
@@ -64,10 +69,15 @@ describe('2.2 Nested Object Tracking', () => {
     });
 
     it.each([
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         [1, { l1: { val: 0 } }, (p: any) => { p.l1.val = 1; }],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         [2, { l1: { l2: { val: 0 } } }, (p: any) => { p.l1.l2.val = 2; }],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         [3, { l1: { l2: { l3: { val: 0 } } } }, (p: any) => { p.l1.l2.l3.val = 3; }],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         [5, { l1: { l2: { l3: { l4: { l5: { val: 0 } } } } } }, (p: any) => { p.l1.l2.l3.l4.l5.val = 5; }],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         [10, { l1: { l2: { l3: { l4: { l5: { l6: { l7: { l8: { l9: { l10: { val: 0 } } } } } } } } } } }, (p: any) => { p.l1.l2.l3.l4.l5.l6.l7.l8.l9.l10.val = 10; }]
     ])('Writing nested key (%i levels) notifies subscribers', (_, initial, writeFn) => {
         const listener = vi.fn();
@@ -79,39 +89,39 @@ describe('2.2 Nested Object Tracking', () => {
     it('Adding new key to nested object notifies subscribers', () => {
         const listener = vi.fn();
         const proxy = createStateProxy({ nested: { a: 1 } }, listener);
-        (proxy.nested as any).b = 2;
+        (proxy.nested as Record<string, unknown>).b = 2;
         expect(listener).toHaveBeenCalledTimes(1);
     });
 
     it('Deleting key from nested object notifies subscribers', () => {
         const listener = vi.fn();
         const proxy = createStateProxy({ nested: { a: 1 } }, listener);
-        delete (proxy.nested as any).a;
+        delete (proxy.nested as Record<string, unknown>).a;
         expect(listener).toHaveBeenCalledTimes(1);
     });
 
     it('Replacing nested object with new object notifies subscribers', () => {
         const listener = vi.fn();
         const proxy = createStateProxy({ nested: { a: 1 } }, listener);
-        proxy.nested = { b: 2 } as any;
+        proxy.nested = { b: 2 } as unknown as { a: number };
         expect(listener).toHaveBeenCalledTimes(1);
     });
 
     it('New assigned nested object is also tracked (eager wrapping)', () => {
         const listener = vi.fn();
         const proxy = createStateProxy({ nested: { a: 1 } }, listener);
-        proxy.nested = { b: 2 } as any;
+        proxy.nested = { b: 2 } as unknown as { a: number };
         listener.mockClear();
-        (proxy.nested as any).b = 3;
+        (proxy.nested as Record<string, number>).b = 3;
         expect(listener).toHaveBeenCalledTimes(1);
     });
 
     it('Replacing nested object — old object is no longer tracked', () => {
         const listener = vi.fn();
         const initialSub = { a: 1 };
-        const state = { nested: initialSub };
+        const state = { nested: initialSub as { a: number } | Record<string, number> };
         const proxy = createStateProxy(state, listener);
-        proxy.nested = { b: 2 } as any;
+        proxy.nested = { b: 2 } as Record<string, number>;
         listener.mockClear();
         initialSub.a = 2;
         expect(listener).not.toHaveBeenCalled();
@@ -120,16 +130,16 @@ describe('2.2 Nested Object Tracking', () => {
     it('Two sibling nested objects tracked independently', () => {
         const listener = vi.fn();
         const proxy = createStateProxy({ a: { val: 1 }, b: { val: 2 } }, listener);
-        proxy.a.val = 10;
+        (proxy.a as Record<string, number>).val = 10;
         expect(listener).toHaveBeenCalledTimes(1);
-        proxy.b.val = 20;
+        (proxy.b as Record<string, number>).val = 20;
         expect(listener).toHaveBeenCalledTimes(2);
     });
 
     it('Writing to sibling object does not affect other sibling', () => {
         const proxy = createStateProxy({ a: { val: 1 }, b: { val: 2 } }, vi.fn());
-        proxy.a.val = 10;
-        expect(proxy.b.val).toBe(2);
+        (proxy.a as Record<string, number>).val = 10;
+        expect((proxy.b as Record<string, number>).val).toBe(2);
     });
 
     it('null nested value does not crash on read', () => {
@@ -140,14 +150,14 @@ describe('2.2 Nested Object Tracking', () => {
     it('Reassigning nested object to null notifies subscribers', () => {
         const listener = vi.fn();
         const proxy = createStateProxy({ nested: { a: 1 } }, listener);
-        (proxy as any).nested = null;
+        (proxy as Record<string, unknown>).nested = null;
         expect(listener).toHaveBeenCalledTimes(1);
     });
 
     it('Reassigning nested object from null to object notifies subscribers', () => {
         const listener = vi.fn();
-        const proxy = createStateProxy({ nested: null }, listener);
-        proxy.nested = { a: 1 } as any;
+        const proxy = createStateProxy({ nested: null as { a: number } | null }, listener);
+        proxy.nested = { a: 1 };
         expect(listener).toHaveBeenCalledTimes(1);
     });
 });
@@ -171,14 +181,23 @@ describe('2.3 Array Tracking', () => {
     });
 
     it.each([
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ['push()', (p: any) => p.arr.push(4), [1, 2, 3, 4]],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ['pop()', (p: any) => p.arr.pop(), [1, 2]],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ['shift()', (p: any) => p.arr.shift(), [2, 3]],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ['unshift()', (p: any) => p.arr.unshift(0), [0, 1, 2, 3]],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ['splice() removes', (p: any) => p.arr.splice(1, 1), [1, 3]],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ['splice() adds', (p: any) => p.arr.splice(1, 0, 1.5), [1, 1.5, 2, 3]],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ['splice() removes and adds', (p: any) => p.arr.splice(1, 1, 2.5), [1, 2.5, 3]],
-        ['sort()', (p: any) => p.arr.sort((a: any, b: any) => b - a), [3, 2, 1]],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ['sort()', (p: any) => p.arr.sort((a: number, b: number) => b - a), [3, 2, 1]],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ['reverse()', (p: any) => p.arr.reverse(), [3, 2, 1]]
     ])('%s notifies subscribers and modifies correctly', (_, action, expected) => {
         const listener = vi.fn();
@@ -218,8 +237,11 @@ describe('2.3 Array Tracking', () => {
     });
 
     it.each([
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ['concat()', (p: any) => p.arr.concat([4]), [1, 2, 3, 4]],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ['map()', (p: any) => p.arr.map((x: number) => x * 2), [2, 4, 6]],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ['filter()', (p: any) => p.arr.filter((x: number) => x > 1), [2, 3]]
     ])('%s does not mutate original — no notification', (_, action, expectedResult) => {
         const listener = vi.fn();
@@ -264,10 +286,12 @@ describe('2.3 Array Tracking', () => {
 
     it('Array push of object — new object is tracked', () => {
         const listener = vi.fn();
-        const proxy = createStateProxy({ arr: [] as any[] }, listener);
-        proxy.arr.push({ id: 1 });
+        const proxy = createStateProxy({ arr: [] as unknown[] }, listener);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        proxy.arr.push({ id: 1 } as any);
         listener.mockClear();
-        proxy.arr[0].id = 2;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (proxy.arr[0] as any).id = 2;
         expect(listener).toHaveBeenCalledTimes(1);
     });
 
@@ -320,8 +344,11 @@ describe('2.4 WeakMap & Proxy Safety', () => {
     });
 
     it.each([
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ['Object.keys()', (p: any) => Object.keys(p), ['a', 'b']],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ['Object.values()', (p: any) => Object.values(p), [1, 2]],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ['Object.entries()', (p: any) => Object.entries(p), [['a', 1], ['b', 2]]]
     ])('%s works correctly on proxied object', (_, fn, expected) => {
         const proxy = createStateProxy({ a: 1, b: 2 }, vi.fn());
@@ -385,14 +412,14 @@ describe('2.5 Non-Proxied Value Types', () => {
         ['null', null],
         ['undefined', undefined]
     ])('%s is not wrapped in Proxy', (_, val) => {
-        const proxy = createStateProxy(val as any, vi.fn());
+        const proxy = createStateProxy(val as object, vi.fn());
         expect(proxy).toBe(val);
     });
 
     it('Class instance is not wrapped in Proxy', () => {
         class MyClass { }
         const inst = new MyClass();
-        const proxy = createStateProxy(inst as any, vi.fn());
+        const proxy = createStateProxy(inst as object, vi.fn());
         expect(proxy).toBe(inst);
     });
 });
@@ -408,7 +435,7 @@ describe('2.6 Assigning a Proxy Value into Another Property', () => {
         const proxiedB = proxy.b;
 
         // Assign the proxy to proxy.a — exercises the true branch on line 51
-        proxy.a = proxiedB as any;
+        proxy.a = proxiedB as typeof proxy.a;
         expect(listener).toHaveBeenCalled();
 
         // After assignment, proxy.a should reflect the correct value
@@ -420,7 +447,7 @@ describe('2.6 Assigning a Proxy Value into Another Property', () => {
         // proxy.a still notify subscribers.
         const listener = vi.fn();
         const proxy = createStateProxy({ a: { x: 1 }, b: { x: 2 } }, listener);
-        proxy.a = proxy.b as any;  // true branch: rawMap.has(proxy.b) === true
+        proxy.a = proxy.b as typeof proxy.a;  // true branch: rawMap.has(proxy.b) === true
         listener.mockClear();
 
         proxy.a.x = 99;

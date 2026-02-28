@@ -24,18 +24,18 @@ describe('3.1 Real World Scenarios', () => {
 
     describe('Todo store', () => {
         it('add todo', () => {
-            const store = createStore({ todos: [] as any[] });
+            const store = createStore({ todos: [] as unknown[] });
             store.setState(s => ({ todos: [...s.todos, { id: 1 }] }));
             expect(store.getState().todos.length).toBe(1);
         });
         it('remove todo', () => {
             const store = createStore({ todos: [{ id: 1 }] });
-            store.setState(s => ({ todos: [] }));
+            store.setState(() => ({ todos: [] }));
             expect(store.getState().todos.length).toBe(0);
         });
         it('toggle todo complete', () => {
             const store = createStore({ todos: [{ id: 1, done: false }] });
-            store.setState(s => ({ todos: [{ id: 1, done: true }] }));
+            store.setState(() => ({ todos: [{ id: 1, done: true }] }));
             expect(store.getState().todos[0].done).toBe(true);
         });
         it('filter completed todos via computed (derived)', () => {
@@ -69,8 +69,8 @@ describe('3.1 Real World Scenarios', () => {
             ['update quantity', { items: [{ id: 1, qty: 1 }] }, { items: [{ id: 1, qty: 2 }] }],
             ['clear cart', { items: [{ id: 1 }] }, { items: [] }]
         ])('%s', (_, initial, expected) => {
-            const store = createStore(initial as any);
-            store.setState(expected as any);
+            const store = createStore(initial as Record<string, unknown>);
+            store.setState(expected as Record<string, unknown>);
             expect(store.getState()).toEqual(expected);
         });
 
@@ -91,12 +91,12 @@ describe('3.1 Real World Scenarios', () => {
 
     describe('Auth store', () => {
         it('login sets user', () => {
-            const store = createStore({ user: null as any });
+            const store = createStore({ user: null as ({ id: number } | null) });
             store.setState({ user: { id: 1 } });
             expect(store.getState().user).toEqual({ id: 1 });
         });
         it('logout clears user', () => {
-            const store = createStore({ user: { id: 1 } });
+            const store = createStore({ user: { id: 1 } as ({ id: number } | null) });
             store.setState({ user: null });
             expect(store.getState().user).toBeNull();
         });
@@ -125,7 +125,7 @@ describe('3.1 Real World Scenarios', () => {
         });
 
         it('validate fields', () => {
-            const store = createStore({ email: 'test', errors: {} as any });
+            const store = createStore({ email: 'test', errors: {} as Record<string, unknown> });
             if (!store.getState().email.includes('@')) {
                 store.setState({ errors: { email: 'invalid' } });
             }
@@ -218,8 +218,7 @@ describe('3.2 Subscription Lifecycle', () => {
     it('Unsubscribe inside subscribe callback — safe to call mid-notification', () => {
         const store = createStore({ a: 1 });
         const l1 = vi.fn();
-        let unsub1: any;
-        unsub1 = store.subscribe(() => {
+        const unsub1 = store.subscribe(() => {
             l1();
             unsub1();
         });
@@ -246,7 +245,7 @@ describe('3.3 State Immutability', () => {
         const state = store.getState();
         const listener = vi.fn();
         store.subscribe(listener);
-        (state as any).a = 2;
+        (state as Record<string, unknown>).a = 2;
         expect(listener).not.toHaveBeenCalled();
     });
 

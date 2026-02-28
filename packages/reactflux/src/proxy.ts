@@ -25,11 +25,11 @@ export function createStateProxy<T extends object>(state: T, onChange: () => voi
     const handler: ProxyHandler<T> = {
         get(target, prop, receiver) {
             if (Array.isArray(target) && typeof prop === 'string' && ['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse'].includes(prop)) {
-                return (...args: any[]) => {
+                return (...args: unknown[]) => {
                     const prevBatching = isBatching;
                     isBatching = true;
 
-                    const method = (target as any)[prop as string];
+                    const method = Reflect.get(target, prop, receiver) as (...a: unknown[]) => unknown;
                     const result = Reflect.apply(method, receiver, args);
 
                     isBatching = prevBatching;

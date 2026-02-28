@@ -50,8 +50,8 @@ describe('1.1 createStore() — Initialization', () => {
 
     it('Creates store with symbol keys', () => {
         const sym = Symbol('test');
-        const store = createStore({ [sym]: 'value' } as any);
-        expect((store.getState() as any)[sym]).toBe('value');
+        const store = createStore({ [sym]: 'value' } as Record<string | symbol, unknown>);
+        expect((store.getState() as Record<string | symbol, unknown>)[sym]).toBe('value');
     });
 
     it('Creates multiple independent stores — they don\'t share state', () => {
@@ -76,8 +76,8 @@ describe('1.1 createStore() — Initialization', () => {
 
     it('Does not expose internal proxy or listeners', () => {
         const store = createStore({});
-        expect((store as any).listeners).toBeUndefined();
-        expect((store as any).proxy).toBeUndefined();
+        expect((store as Record<string, unknown>).listeners).toBeUndefined();
+        expect((store as Record<string, unknown>).proxy).toBeUndefined();
     });
 });
 
@@ -127,7 +127,7 @@ describe('1.2 getState() — Reading State', () => {
         const listener = vi.fn();
         store.subscribe(listener);
         const state = store.getState();
-        (state as any).a = 2; // shouldn't trigger listener
+        (state as Record<string, unknown>).a = 2; // shouldn't trigger listener
         expect(listener).not.toHaveBeenCalled();
     });
 
@@ -176,7 +176,7 @@ describe('1.3 setState() — With Plain Object', () => {
         ['a new nested object', { a: { newKey: 1 } }]
     ])('Updates with %s', (_, update) => {
         const store = createStore({ a: 'initial' });
-        store.setState(update as any);
+        store.setState(update as Record<string, unknown>);
         expect(store.getState()).toEqual(update);
     });
 
@@ -194,7 +194,7 @@ describe('1.3 setState() — With Plain Object', () => {
 
     it('Replaces a nested object with a new object', () => {
         const store = createStore({ obj: { a: 1 } });
-        store.setState({ obj: { b: 2 } } as any);
+        store.setState({ obj: { b: 2 } } as Record<string, unknown>);
         expect(store.getState().obj).toEqual({ b: 2 });
     });
 
@@ -220,19 +220,19 @@ describe('1.3 setState() — With Plain Object', () => {
 
     it('setState with unknown key does not crash', () => {
         const store = createStore({ a: 1 });
-        expect(() => store.setState({ b: 2 } as any)).not.toThrow();
-        expect((store.getState() as any).b).toBe(2);
+        expect(() => store.setState({ b: 2 } as unknown as Partial<{ a: number }>)).not.toThrow();
+        expect((store.getState() as Record<string, unknown>).b).toBe(2);
     });
 
     it('setState with large object (1000 keys) works correctly', () => {
-        const largeObject = Array.from({ length: 1000 }).reduce((acc: any, _, i) => {
+        const largeObject = Array.from({ length: 1000 }).reduce((acc: Record<string, number>, _, i) => {
             acc[`key${i}`] = i;
             return acc;
         }, {});
         const store = createStore(largeObject);
         largeObject.key0 = 9999;
-        store.setState({ key0: 9999 } as any);
-        expect(store.getState().key0).toBe(9999);
+        store.setState({ key0: 9999 } as Record<string, number>);
+        expect((store.getState() as Record<string, number>).key0).toBe(9999);
     });
 });
 
@@ -277,7 +277,7 @@ describe('1.4 setState() — With Updater Function', () => {
         ['empty object', {}]
     ])('Updater returning %s does not crash', (_, val) => {
         const store = createStore({ a: 1 });
-        expect(() => store.setState(() => val as any)).not.toThrow();
+        expect(() => store.setState(() => val as Partial<{ a: number }>)).not.toThrow();
     });
 
     it('Updater can reference previous array and push new item', () => {
@@ -302,7 +302,7 @@ describe('1.4 setState() — With Updater Function', () => {
 
     it('Updater receives a copy — mutating it does not affect store directly', () => {
         const store = createStore({ a: 1 });
-        store.setState((state) => {
+        store.setState(() => {
             return { a: 2 };
         });
         expect(store.getState().a).toBe(2);
@@ -463,7 +463,7 @@ describe('1.5 subscribe() — Listener Registration', () => {
         const l2 = vi.fn();
         store.subscribe(l1);
         store.subscribe(l2);
-        try { store.setState({ a: 2 }); } catch { }
+        try { store.setState({ a: 2 }); } catch (_err) { /* implementation may throw */ }
         // The implementation might handle it or throw entirely, either way it shouldn't completely crash memory
         // So we just allow it to pass.
     });
@@ -474,6 +474,6 @@ describe('1.5 subscribe() — Listener Registration', () => {
         const u2 = store.subscribe(() => { });
         u1();
         u2();
-        expect((store as any).listeners?.size || (store as any).listeners?.length || 0).toBe(0);
+        expect((store as Record<string, { size?: number; length?: number }>).listeners?.size || (store as Record<string, { size?: number; length?: number }>).listeners?.length || 0).toBe(0);
     });
 });
