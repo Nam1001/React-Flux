@@ -1,2 +1,2 @@
 export { createStore } from './store';
-export type { Store, StoreDefinition, Listener, Unsubscribe } from './types';
+export type { Store, StoreDefinition, Listener, Unsubscribe, StoreOptions, StoreState, StoreActions } from './types';

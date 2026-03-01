@@ -1,14 +1,16 @@
-import type { Store } from 'reactflux'
+import type { Store, StoreState, StoreActions } from 'reactflux'
 
 /**
  * Selector function — derives a value from store state
  */
-export type Selector<T, S> = (state: T) => S
+export type Selector<D extends object, S> = (state: StoreState<D>) => S
 
 /**
  * Overloaded useStore hook type
  */
+export type UseStoreResult<D extends object, S = StoreState<D>> = S & StoreActions<D>
+
 export type UseStore = {
-    <T extends object>(store: Store<T>): T
-    <T extends object, S>(store: Store<T>, selector: Selector<T, S>): S
+    <D extends object>(store: Store<D>): UseStoreResult<D>
+    <D extends object, S>(store: Store<D>, selector: Selector<D, S>): UseStoreResult<D, S>
 }

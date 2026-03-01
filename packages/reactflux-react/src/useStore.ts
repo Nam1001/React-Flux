@@ -1,5 +1,6 @@
-import { useSyncExternalStore, useRef, useCallback } from 'react'
-import type { Store, Selector } from './types'
+import { useSyncExternalStore, useRef, useCallback, useMemo } from 'react'
+import type { Store, StoreState, StoreActions } from 'reactflux'
+import type { Selector, UseStoreResult } from './types'
 
 export function shallowEqual(a: unknown, b: unknown): boolean {
     if (Object.is(a, b)) return true
@@ -14,16 +15,13 @@ export function shallowEqual(a: unknown, b: unknown): boolean {
     return true
 }
 
-export function useStore<T extends object>(store: Store<T>): T
-export function useStore<T extends object, S>(store: Store<T>, selector: Selector<T, S>): S
-export function useStore<T extends object, S = T>(
-    store: Store<T>,
-    selector?: Selector<T, S>
-): T | S {
-    const lastResult = useRef<T | S | undefined>(undefined)
-    const lastState = useRef<T | undefined>(undefined)
+export function useStore<D extends object, S = StoreState<D>>(
+    store: Store<D>,
+    selector?: Selector<D, S>
+): UseStoreResult<D, S> {
+    const lastResult = useRef<S | undefined>(undefined)
     const hasUpdate = useRef(false)
-    const lastStore = useRef<Store<T> | null>(null)
+    const lastStore = useRef<Store<D> | null>(null)
 
     const subscribe = useCallback(
         (callback: () => void) => {
@@ -42,7 +40,6 @@ export function useStore<T extends object, S = T>(
         if (store !== lastStore.current) {
             lastStore.current = store
             lastResult.current = undefined
-            lastState.current = undefined
             hasUpdate.current = true
         }
 
@@ -62,13 +59,20 @@ export function useStore<T extends object, S = T>(
         }
 
         // No selector: state is mutable, same ref. Return shallow copy when store updated
-        if (hasUpdate.current) {
+        if (hasUpdate.current || lastResult.current === undefined) {
             hasUpdate.current = false
-            lastState.current = { ...state }
-            return lastState.current as T
+            lastResult.current = { ...state } as any
         }
-        return (lastState.current ??= { ...state }) as T
+        return lastResult.current as S
     }, [store, selector])
 
-    return useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
+    const result = useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
+
+    // Handle selector and no-selector cases separately
+    if (selector) {
+        return result as UseStoreResult<D, S>
+    }
+
+    // No selector — return state + actions merged
+    return { ...(result as any), ...store.actions } as UseStoreResult<D, S>
 }
