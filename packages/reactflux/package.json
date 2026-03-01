@@ -1,11 +1,30 @@
 {
     "name": "reactflux",
     "version": "0.0.1",
-    "main": "dist/index.cjs.js",
-    "module": "dist/index.esm.js",
+    "main": "dist/index.cjs",
+    "module": "dist/index.mjs",
     "types": "dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.cjs"
+        }
+    },
     "scripts": {
-        "build": "rollup -c",
-        "test": "vitest run"
+        "test": "vitest run --coverage && npx tsx benchmarks/run.ts && npx tsx benchmarks/week4.ts",
+        "test:watch": "vitest --coverage",
+        "test:coverage": "vitest run --coverage",
+        "test:bench": "npx tsx benchmarks/run.ts",
+        "bench:week4": "npx tsx benchmarks/week4.ts",
+        "lint": "eslint src --ext .ts",
+        "build": "rollup -c"
+    },
+    "devDependencies": {
+        "@vitest/coverage-v8": "^1.6.1",
+        "tsx": "^4.21.0"
+    },
+    "peerDependencies": {
+        "immer": ">=10.0.0"
     }
 }

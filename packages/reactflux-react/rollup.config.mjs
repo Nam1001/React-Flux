@@ -5,12 +5,12 @@ export default {
     external: ['react', 'reactflux'],
     output: [
         {
-            file: 'dist/index.cjs.js',
+            file: 'dist/index.cjs',
             format: 'cjs',
             sourcemap: true,
         },
         {
-            file: 'dist/index.esm.js',
+            file: 'dist/index.mjs',
             format: 'es',
             sourcemap: true,
         },

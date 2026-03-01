@@ -2,7 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - 'feat/**'
+      - 'fix/**'
   pull_request:
     branches: [ main ]
 
@@ -21,4 +23,5 @@ jobs:
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
-      - run: pnpm test
+      - name: Test + Coverage + Benchmarks
+        run: pnpm --filter reactflux test
