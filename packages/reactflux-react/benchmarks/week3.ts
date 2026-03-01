@@ -52,14 +52,14 @@ function runBenchmarks(): void {
   const store3 = createStore({ count: 42, name: 'test' })
   results.push(bench('selector execution (primitive)', () => {
     const state = store3.getState()
-    const _ = state.count
+    void state.count
   }))
 
   // 4. Selector execution derived
   const store4 = createStore({ a: 10, b: 20 })
   results.push(bench('selector execution (derived)', () => {
     const state = store4.getState()
-    const _ = state.a + state.b
+    void (state.a + state.b)
   }))
 
   // 5. setState + notify

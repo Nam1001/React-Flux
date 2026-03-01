@@ -1,5 +1,5 @@
 import { render, screen, act } from '@testing-library/react'
-import { createStore } from 'reactflux'
+import { createStore, type Store } from 'reactflux'
 import { useStore } from '../src/useStore'
 import { expect, it, describe, vi } from 'vitest'
 import React, { useCallback } from 'react'
@@ -7,11 +7,11 @@ import React, { useCallback } from 'react'
 describe('useStore with selector', () => {
     it('selector receives full state as argument', () => {
         const store = createStore({ a: 1, b: 2 })
-        let receivedState: any
+        let receivedState: unknown
         function Test() {
-            useStore(store, (s) => {
+            useStore(store, (s: unknown) => {
                 receivedState = s
-                return s.a
+                return (s as { a: number; b: number }).a
             })
             return null
         }
@@ -149,14 +149,17 @@ describe('useStore with selector', () => {
     })
 
     it('selector returning null does not crash', () => {
-        const store = createStore({ data: { name: 'test' } })
+        const store = createStore<{ data: { name: string } | null }>({ data: { name: 'test' } })
         function Test() {
-            const name = useStore(store, (s) => (s.data ? s.data.name : null))
+            const name = useStore(store, (s: unknown) => {
+                const state = s as { data: { name: string } | null }
+                return state.data ? state.data.name : null
+            })
             return <div data-testid="val">{name === null ? 'null' : name}</div>
         }
         render(<Test />)
         act(() => {
-            store.setState({ data: null as any })
+            store.setState({ data: null })
         })
         expect(screen.getByTestId('val')).toHaveTextContent('null')
     })
@@ -206,7 +209,7 @@ describe('useStore with selector', () => {
         const renderSpy = vi.fn()
         function Test() {
             renderSpy()
-            const selector = useCallback((s: any) => s.count, [])
+            const selector = useCallback((s: unknown) => (s as { count: number }).count, [])
             const count = useStore(store, selector)
             return <div>{count}</div>
         }

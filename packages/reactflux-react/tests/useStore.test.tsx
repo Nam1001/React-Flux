@@ -1,5 +1,5 @@
 import { render, screen, act } from '@testing-library/react'
-import { createStore } from 'reactflux'
+import { createStore, type Store } from 'reactflux'
 import { useStore, shallowEqual } from '../src/useStore'
 import { expect, it, describe, vi } from 'vitest'
 import React from 'react'
@@ -21,8 +21,9 @@ describe('useStore', () => {
     })
 
     it('returns correct initial state on first render', () => {
-        const store = createStore({ name: 'flux' })
-        let renderedState: any
+        type TestState = { name: string }
+        const store = createStore<TestState>({ name: 'flux' })
+        let renderedState: TestState | undefined
         function Profile() {
             renderedState = useStore(store)
             return null
@@ -126,8 +127,9 @@ describe('useStore', () => {
     })
 
     it('useStore works with flat state', () => {
-        const store = createStore({ a: 1, b: 'test' })
-        const { result } = { result: { current: null as any } }
+        type TestState = { a: number; b: string }
+        const store = createStore<TestState>({ a: 1, b: 'test' })
+        const { result } = { result: { current: null as TestState | null } }
         function Test() {
             result.current = useStore(store)
             return null
@@ -137,53 +139,58 @@ describe('useStore', () => {
     })
 
     it('useStore works with nested state', () => {
-        const store = createStore({ user: { id: 1, profile: { name: 'John' } } })
-        const { result } = { result: { current: null as any } }
+        type TestState = { user: { id: number; profile: { name: string } } }
+        const store = createStore<TestState>({ user: { id: 1, profile: { name: 'John' } } })
+        const { result } = { result: { current: null as TestState | null } }
         function Test() {
             result.current = useStore(store)
             return null
         }
         render(<Test />)
-        expect(result.current.user.profile.name).toBe('John')
+        expect(result.current?.user.profile.name).toBe('John')
     })
 
     it('useStore works with array state', () => {
-        const store = createStore({ list: [1, 2, 3] })
-        const { result } = { result: { current: null as any } }
+        type TestState = { list: number[] }
+        const store = createStore<TestState>({ list: [1, 2, 3] })
+        const { result } = { result: { current: null as TestState | null } }
         function Test() {
             result.current = useStore(store)
             return null
         }
         render(<Test />)
-        expect(result.current.list).toEqual([1, 2, 3])
+        expect(result.current?.list).toEqual([1, 2, 3])
     })
 
     it('useStore works with boolean state', () => {
-        const store = createStore({ ok: true })
-        const { result } = { result: { current: null as any } }
+        type TestState = { ok: boolean }
+        const store = createStore<TestState>({ ok: true })
+        const { result } = { result: { current: null as TestState | null } }
         function Test() {
             result.current = useStore(store)
             return null
         }
         render(<Test />)
-        expect(result.current.ok).toBe(true)
+        expect(result.current?.ok).toBe(true)
     })
 
     it('useStore works with null state', () => {
         // Note: createStore requires an object as initial state
-        const store = createStore({ data: null as any })
-        const { result } = { result: { current: null as any } }
+        type TestState = { data: null }
+        const store = createStore<TestState>({ data: null })
+        const { result } = { result: { current: null as TestState | null } }
         function Test() {
             result.current = useStore(store)
             return null
         }
         render(<Test />)
-        expect(result.current.data).toBeNull()
+        expect(result.current?.data).toBeNull()
     })
 
     it('useStore works with empty object state', () => {
-        const store = createStore({})
-        const { result } = { result: { current: null as any } }
+        type TestState = Record<string, never>
+        const store = createStore<TestState>({})
+        const { result } = { result: { current: null as TestState | null } }
         function Test() {
             result.current = useStore(store)
             return null
@@ -209,7 +216,7 @@ describe('useStore', () => {
     it('hook called with different store reference — switches correctly', () => {
         const store1 = createStore({ val: 1 })
         const store2 = createStore({ val: 2 })
-        function Test({ s }: { s: any }) {
+        function Test({ s }: { s: Store<{ val: number }> }) {
             const state = useStore(s)
             return <div data-testid="val">{state.val}</div>
         }

@@ -2,7 +2,7 @@ import { render, act } from '@testing-library/react'
 import { createStore } from 'reactflux'
 import { useStore } from '../src/useStore'
 import { expect, it, describe, vi } from 'vitest'
-import React, { useState, useEffect } from 'react'
+import React, { useEffect } from 'react'
 
 describe('lifecycle', () => {
     it('subscription created on component mount', () => {
