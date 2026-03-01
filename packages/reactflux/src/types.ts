@@ -6,7 +6,7 @@ export type StoreState<D> = Omit<D, 'actions'>;
 /**
  * Utility to extract actions from the definition.
  */
-export type StoreActions<D> = D extends { actions: infer A } ? A : {};
+export type StoreActions<D> = D extends { actions: infer A } ? A : Record<string, never> ; 
 
 /**
  * The shape of initial state passed to createStore.

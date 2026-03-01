@@ -1,5 +1,5 @@
-import { useSyncExternalStore, useRef, useCallback, useMemo } from 'react'
-import type { Store, StoreState, StoreActions } from 'reactflux'
+import { useSyncExternalStore, useRef, useCallback } from 'react'
+import type { Store, StoreState } from 'reactflux'
 import type { Selector, UseStoreResult } from './types'
 
 export function shallowEqual(a: unknown, b: unknown): boolean {
@@ -9,8 +9,13 @@ export function shallowEqual(a: unknown, b: unknown): boolean {
     const keysB = Object.keys(b)
     if (keysA.length !== keysB.length) return false
     for (const k of keysA) {
-        if (!Object.prototype.hasOwnProperty.call(b, k) || !Object.is((a as Record<string, unknown>)[k], (b as Record<string, unknown>)[k]))
-            return false
+        if (
+            !Object.prototype.hasOwnProperty.call(b, k) ||
+            !Object.is(
+                (a as Record<string, unknown>)[k],
+                (b as Record<string, unknown>)[k]
+            )
+        ) return false
     }
     return true
 }
@@ -33,10 +38,10 @@ export function useStore<D extends object, S = StoreState<D>>(
         [store]
     )
 
-    const getSnapshot = useCallback(() => {
+    const getSnapshot = useCallback((): S => {
         const state = store.getState()
 
-        // Invalidate cache when store reference changes (e.g. prop switch)
+        // Invalidate cache when store reference changes
         if (store !== lastStore.current) {
             lastStore.current = store
             lastResult.current = undefined
@@ -58,10 +63,10 @@ export function useStore<D extends object, S = StoreState<D>>(
             return next
         }
 
-        // No selector: state is mutable, same ref. Return shallow copy when store updated
+        // No selector: return shallow copy when store updated
         if (hasUpdate.current || lastResult.current === undefined) {
             hasUpdate.current = false
-            lastResult.current = { ...state } as any
+            lastResult.current = { ...state } as S  // ✅ just cache state, don't merge actions here
         }
         return lastResult.current as S
     }, [store, selector])
@@ -73,6 +78,6 @@ export function useStore<D extends object, S = StoreState<D>>(
         return result as UseStoreResult<D, S>
     }
 
-    // No selector — return state + actions merged
-    return { ...(result as any), ...store.actions } as UseStoreResult<D, S>
+    // No selector — merge actions at return time only, not inside getSnapshot
+    return Object.assign({}, result as object, store.actions) as UseStoreResult<D, S>
 }

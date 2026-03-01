@@ -1,5 +1,5 @@
 // packages/reactflux-core/tests/actions.test.ts
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { createStore } from '../src'
 
 // ─────────────────────────────────────────────
