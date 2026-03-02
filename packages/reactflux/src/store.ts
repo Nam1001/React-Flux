@@ -1,6 +1,7 @@
 import { Store, StoreDefinition, Listener, StoreOptions, StoreState, StoreActions, ASYNC_VALUE_MARKER, IAsyncEngine, AsyncValue } from './types'
 import { createStateProxy } from './proxy'
 import { produce } from 'immer'
+import { isBatching, subscribeToBatch, batch } from './batch'
 
 /**
  * Creates a reactive store with auto-tracking features via Proxies.
@@ -42,10 +43,20 @@ export function createStore<D extends object>(
     let lastSnapshotState: StoreState<D> | null = null
 
     const notify = () => {
-        if (batchCount > 0) return
+        if (batchCount > 0 || isBatching()) {
+            batchDirty = true
+            return
+        }
         batchDirty = false
         listeners.forEach(listener => listener(currentState))
     }
+
+    // Subscribe to global batch end
+    const unsubscribeBatch = subscribeToBatch(() => {
+        if (batchDirty) {
+            notify()
+        }
+    })
 
     const proxyState = createStateProxy(initialState, notify)
 
@@ -115,21 +126,17 @@ export function createStore<D extends object>(
 
         subscribe: (listener: Listener<StoreState<D>>) => {
             listeners.add(listener)
-            return () => { listeners.delete(listener) }
+            return () => {
+                listeners.delete(listener)
+                if (listeners.size === 0) {
+                    unsubscribeBatch()
+                }
+            }
         },
 
         // ✅ Fix 3: batch uses its own batchCount increment
         batch: (fn: () => void) => {
-            batchCount++
-            try {
-                fn()
-            } finally {
-                batchCount--
-                if (batchCount === 0 && batchDirty) {
-                    batchDirty = false
-                    notify()
-                }
-            }
+            batch(fn)
         },
 
         fetch: async (key: keyof StoreState<D>, ...args: unknown[]) => {
