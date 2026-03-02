@@ -1,4 +1,4 @@
-import { Store, StoreDefinition, Listener, StoreOptions, StoreState, StoreActions } from './types'
+import { Store, StoreDefinition, Listener, StoreOptions, StoreState, StoreActions, ASYNC_VALUE_MARKER, IAsyncEngine, AsyncValue } from './types'
 import { createStateProxy } from './proxy'
 import { produce } from 'immer'
 
@@ -15,13 +15,31 @@ export function createStore<D extends object>(
     options: StoreOptions = {}
 ): Store<D> {
     // ✅ Fix 1: avoid `as any` — use typed destructure
-    const { actions: rawActions = {}, ...initialState } =
+    const { actions: rawActions = {}, ...initialData } =
         definition as D & { actions?: Record<string, (...args: unknown[]) => unknown> }
 
+    const engines = new Map<string, IAsyncEngine<unknown>>()
+    const initialState = { ...initialData } as StoreState<D>
+
+    // Detect and initialize async values
+    Object.keys(initialData).forEach(key => {
+        const val = (initialData as Record<string, unknown>)[key]
+        if (val && typeof val === 'object' && ASYNC_VALUE_MARKER in val) {
+            const asyncVal = val as unknown as AsyncValue<unknown>
+            const engine = asyncVal.init((nodeState) => {
+                store.setState({ [key]: nodeState } as Partial<StoreState<D>>)
+            })
+            engines.set(key, engine)
+                ; (initialState as Record<string, unknown>)[key] = engine.getState()
+        }
+    })
+
     const listeners = new Set<Listener<StoreState<D>>>()
-    let currentState = { ...initialState } as StoreState<D>
+    let currentState = initialState as StoreState<D>
     let batchCount = 0
     let batchDirty = false
+    let lastSnapshot: StoreState<D> | null = null
+    let lastSnapshotState: StoreState<D> | null = null
 
     const notify = () => {
         if (batchCount > 0) return
@@ -52,13 +70,21 @@ export function createStore<D extends object>(
             nextState = { ...currentState, ...updater }
         }
 
+        if (nextState === currentState) return
+
+        const prevState = currentState
         currentState = nextState
+        lastSnapshot = null
+        lastSnapshotState = null
 
         // Sync proxy state — suppress proxy-triggered notifications during sync
         batchCount++
         try {
             for (const key in nextState) {
-                if (Object.prototype.hasOwnProperty.call(nextState, key)) {
+                if (
+                    Object.prototype.hasOwnProperty.call(nextState, key) &&
+                    (nextState as Record<string, unknown>)[key] !== (prevState as Record<string, unknown>)[key]   // ← skip unchanged keys
+                ) {
                     (proxyState as Record<string, unknown>)[key] =
                         nextState[key as keyof StoreState<D>]
                 }
@@ -75,7 +101,15 @@ export function createStore<D extends object>(
     }
 
     const store = {
-        getState: () => currentState,
+        getState: () => {
+            if (lastSnapshot !== null && lastSnapshotState === currentState) {
+                return lastSnapshot
+            }
+            const snapshot = { ...currentState } as StoreState<D>
+            lastSnapshot = snapshot
+            lastSnapshotState = currentState
+            return snapshot
+        },
 
         setState,
 
@@ -84,9 +118,7 @@ export function createStore<D extends object>(
             return () => { listeners.delete(listener) }
         },
 
-        // ✅ Fix 3: batch uses its own batchCount increment — separate from the
-        // proxy sync increment inside setState. Both cooperate via the same
-        // batchCount variable, so nested calls work correctly.
+        // ✅ Fix 3: batch uses its own batchCount increment
         batch: (fn: () => void) => {
             batchCount++
             try {
@@ -98,6 +130,33 @@ export function createStore<D extends object>(
                     notify()
                 }
             }
+        },
+
+        fetch: async (key: keyof StoreState<D>, ...args: unknown[]) => {
+            if (!engines.has(key as string)) {
+                throw new Error(`ReactFlux: no async key "${String(key)}" found in store`)
+            }
+            const engine = engines.get(key as string)
+            if (engine) await engine.fetch(...args)
+        },
+
+        refetch: async (key: keyof StoreState<D>) => {
+            const engine = engines.get(key as string)
+            if (engine) await engine.refetch()
+        },
+
+        invalidate: (key: keyof StoreState<D>) => {
+            const engine = engines.get(key as string)
+            if (engine) engine.invalidate()
+        },
+
+        invalidateAll: () => {
+            engines.forEach(engine => engine.invalidate())
+        },
+
+        getAsyncState: (key: keyof StoreState<D>) => {
+            const engine = engines.get(key as string)
+            return engine ? engine.getState() : undefined
         },
 
         actions: {} as StoreActions<D>

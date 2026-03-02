@@ -1,2 +1,3 @@
 export { createStore } from './store';
-export type { Store, StoreDefinition, Listener, Unsubscribe, StoreOptions, StoreState, StoreActions } from './types';
+export { createAsync } from './async';
+export type { Store, StoreDefinition, Listener, Unsubscribe, StoreOptions, StoreState, StoreActions, AsyncState, AsyncOptions, AsyncStatus } from './types';
