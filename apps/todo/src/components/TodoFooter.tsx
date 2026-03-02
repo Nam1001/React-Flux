@@ -1,11 +1,11 @@
 import { useStore } from 'reactflux-react'
-import { todoStore, Filter } from '../stores/todoStore'
+import { todoStore, Filter, Todo } from '../stores/todoStore'
 
 export const TodoFooter = () => {
     const { todos, filter, setFilter, clearCompleted } = useStore(todoStore)
 
-    const remaining = todos.filter(t => !t.done).length
-    const hasCompleted = todos.some(t => t.done)
+    const remaining = todos.filter((t: Todo) => !t.done).length
+    const hasCompleted = todos.some((t: Todo) => t.done)
 
     const filters: Filter[] = ['all', 'active', 'done']
 

@@ -1,11 +1,11 @@
 import { useStore } from 'reactflux-react'
-import { todoStore } from '../stores/todoStore'
+import { todoStore, Todo } from '../stores/todoStore'
 import { TodoItem } from './TodoItem'
 
 export const TodoList = () => {
     const { todos, filter, toggle, remove } = useStore(todoStore)
 
-    const visibleTodos = todos.filter(t =>
+    const visibleTodos = todos.filter((t: Todo) =>
         filter === 'all' ? true :
             filter === 'active' ? !t.done : t.done
     )
@@ -16,7 +16,7 @@ export const TodoList = () => {
 
     return (
         <ul style={{ listStyle: 'none', padding: 0 }}>
-            {visibleTodos.map(todo => (
+            {visibleTodos.map((todo: Todo) => (
                 <TodoItem
                     key={todo.id}
                     todo={todo}

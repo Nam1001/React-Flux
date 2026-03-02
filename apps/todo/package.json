@@ -5,6 +5,7 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
+        "prebuild": "pnpm --filter reactflux... --filter reactflux-react... build",
         "build": "tsc && vite build",
         "preview": "vite preview"
     },
