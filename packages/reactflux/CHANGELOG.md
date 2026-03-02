@@ -6,8 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-## [Unreleased]
-- Demo app: Counter + Todo (deferred from v0.3, planned for v0.3.1)
+## [0.4.0] - 2026-03-02
+### Added — `reactflux-core`
+- `createAsync(fetcher, options)` — core engine for async state management
+- Lifecycle management — automatic tracking of `idle`, `loading`, `success`, and `error` states
+- Advanced caching — TTL (Time-To-Live) and SWR (Stale-While-Revalidate) support
+- Optimistic updates — immediate UI feedback with automatic rollback on failure
+- Argument-aware fetching — separate cache entries based on fetcher arguments
+- Week 5 performance benchmarks — engine overhead, cache hits, and optimistic transitions
+
+### Fixed — `reactflux-core`
+- ESLint: Replaced `@ts-ignore` with `@ts-expect-error` and added required descriptions in benchmarks
 
 ---
 

@@ -1,15 +1,17 @@
 {
   "name": "reactflux-monorepo",
-  "version": "0.0.0",
+  "version": "0.4.0",
   "private": true,
   "scripts": {
     "build": "pnpm -r run build",
+    "size:check": "pnpm build && npx tsx scripts/size-check.ts",
     "test": "pnpm -r run test",
     "lint": "eslint . --ext .ts,.tsx",
     "format": "prettier --write \"**/*.{ts,tsx,md,json}\""
   },
   "devDependencies": {
     "@rollup/plugin-typescript": "^11.1.6",
+    "tsx": "^4.21.0",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",
     "eslint": "^8.56.0",
