@@ -22,7 +22,7 @@ export function createStore<D extends object>(
 
     let workingData: Record<string, unknown> = { ...initialData }
     const allAsyncInits: Array<{ key: string; init: (onUpdate: (state: unknown) => void) => unknown }> = []
-    let readOnlyKeys = new Set<string>()
+    const readOnlyKeys = new Set<string>()
     const onStateChangedCallbacks: Array<(ctx: {
         changedKeys: Set<string>;
         getState: () => Record<string, unknown>;
@@ -72,7 +72,7 @@ export function createStore<D extends object>(
 
     const runOnStateChanged = (changedKeys: Set<string>) => {
         const setComputed = (key: string, value: unknown) => {
-            ;(currentState as Record<string, unknown>)[key] = value
+            (currentState as Record<string, unknown>)[key] = value
         }
         for (const cb of onStateChangedCallbacks) {
             cb({
@@ -138,7 +138,7 @@ export function createStore<D extends object>(
                     (currentState as Record<string, unknown>)[key] !==
                         (prevState as Record<string, unknown>)[key]
                 ) {
-                    ;(proxyState as Record<string, unknown>)[key] =
+                    (proxyState as Record<string, unknown>)[key] =
                         currentState[key as keyof StoreState<D>]
                 }
             }
