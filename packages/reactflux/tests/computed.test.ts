@@ -1,6 +1,8 @@
 // packages/reactflux/tests/computed.test.ts
 import { describe, it, expect, vi } from 'vitest'
-import { createStore, computed, createAsync } from '../src'
+import { createStore } from '../src'
+import { computed } from '../src/computed'
+import { createAsync } from '../src/async'
 
 // ─────────────────────────────────────────────
 // SHARED TYPES
