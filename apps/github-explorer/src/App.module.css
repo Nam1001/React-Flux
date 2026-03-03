@@ -1,0 +1,55 @@
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.title {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.themeToggle {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--border-color);
+    background: var(--card-bg);
+    color: var(--text-color);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.themeToggle:hover {
+    border-color: var(--primary-color);
+}
+
+.mainLayout {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.contentRow {
+    display: flex;
+    gap: 2rem;
+    flex-direction: column;
+}
+
+@media (min-width: 768px) {
+    .contentRow {
+        flex-direction: row;
+        align-items: flex-start;
+    }
+
+    .contentRow>div {
+        flex: 1;
+    }
+}

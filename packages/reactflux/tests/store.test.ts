@@ -71,7 +71,10 @@ describe('1.1 createStore() — Initialization', () => {
 
     it('Returns an object with exactly getState, setState, subscribe methods', () => {
         const store = createStore({});
-        expect(Object.keys(store).sort()).toEqual(['actions', 'batch', 'getState', 'setState', 'subscribe']);
+        expect(Object.keys(store).sort()).toEqual([
+            'actions', 'batch', 'fetch', 'getAsyncState',
+            'getState', 'invalidate', 'invalidateAll', 'refetch', 'setState', 'subscribe'
+        ].sort());
     });
 
     it('Does not expose internal proxy or listeners', () => {

@@ -1,6 +1,6 @@
 {
     "name": "reactflux",
-    "version": "0.0.1",
+    "version": "0.4.0",
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
     "types": "dist/index.d.ts",
@@ -12,11 +12,12 @@
         }
     },
     "scripts": {
-        "test": "vitest run --coverage && npx tsx benchmarks/run.ts && npx tsx benchmarks/week4.ts",
+        "test": "vitest run --coverage && npx tsx benchmarks/run.ts && npx tsx benchmarks/week4.ts && npx tsx benchmarks/week5.ts",
         "test:watch": "vitest --coverage",
         "test:coverage": "vitest run --coverage",
         "test:bench": "npx tsx benchmarks/run.ts",
         "bench:week4": "npx tsx benchmarks/week4.ts",
+        "bench:week5": "npx tsx benchmarks/week5.ts",
         "lint": "eslint src --ext .ts",
         "build": "rollup -c"
     },
