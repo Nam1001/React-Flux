@@ -1,4 +1,4 @@
-import { createStore, createAsync } from '../src'
+import { createStore, createAsync, computed } from '../src'
 
 interface BenchmarkResult {
     operation: string
@@ -50,6 +50,9 @@ function benchSync(
     const limits: Record<string, number> = {
         'createAsync() initialization': 0.1,
         'optimistic update - immediate state change': 0.2,
+        'computed read (getState().computed)': 0.1,
+        'computed recompute (1 dep)': 0.1,
+        'computed three-level chain recompute': 0.5,
     }
 
     const limit = limits[label] ?? 1.0
@@ -58,7 +61,7 @@ function benchSync(
 }
 
 async function runBenchmarks(): Promise<void> {
-    console.log('\n⚡ ReactFlux Core — Week 5 Benchmark Results (v0.4 Async State)\n')
+    console.log('\n⚡ ReactFlux Core — Week 5 Benchmark Results (v0.4 Async + v0.5 Computed)\n')
 
     const results: BenchmarkResult[] = []
 
@@ -110,6 +113,37 @@ async function runBenchmarks(): Promise<void> {
     results.push(benchSync('optimistic update - immediate state change', () => {
         // @ts-expect-error - internal access for benchmark
         store5.fetch('data', 100, { optimistic: { data: 100 } })
+    }, 10_000))
+
+    // ── 6. Computed read
+    const store6 = createStore({
+        n: 1,
+        sum: computed((s: { n: number }) => s.n + 1),
+    })
+    results.push(benchSync('computed read (getState().computed)', () => {
+        store6.getState().sum
+    }))
+
+    // ── 7. Computed recompute (one dependency)
+    const store7 = createStore({
+        x: 0,
+        doubled: computed((s: { x: number }) => s.x * 2),
+    })
+    let x = 0
+    results.push(benchSync('computed recompute (1 dep)', () => {
+        store7.setState({ x: ++x })
+    }, 10_000))
+
+    // ── 8. Three-level chain recompute
+    const store8 = createStore({
+        base: 0,
+        c1: computed((s: { base: number }) => s.base + 1),
+        c2: computed((s: { c1: number }) => (s as { c1: number }).c1 * 2),
+        c3: computed((s: { c2: number }) => (s as { c2: number }).c2 + 10),
+    })
+    let base = 0
+    results.push(benchSync('computed three-level chain recompute', () => {
+        store8.setState({ base: ++base })
     }, 10_000))
 
     // ── Print results

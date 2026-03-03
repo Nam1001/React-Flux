@@ -1,6 +1,62 @@
 import { Store, StoreDefinition, Listener, StoreOptions, StoreState, StoreActions, ASYNC_VALUE_MARKER, IAsyncEngine, AsyncValue } from './types'
 import { createStateProxy } from './proxy'
 import { produce } from 'immer'
+import { isBatching, subscribeToBatch } from './batch'
+import { COMPUTED_MARKER, trackDependencies, type ComputedEngine } from './computed'
+
+/** Throws if a cycle exists in the computed dependency graph. */
+function detectCircular(
+    computedKeys: string[],
+    getDeps: (key: string) => Set<string>
+): void {
+    const keySet = new Set(computedKeys)
+    const path: string[] = []
+    const visited = new Set<string>()
+
+    function visit(key: string): void {
+        if (path.includes(key)) {
+            throw new Error(
+                `ReactFlux: circular dependency in computed values: ${[...path, key].join(' → ')}`
+            )
+        }
+        if (visited.has(key)) return
+        path.push(key)
+        for (const d of getDeps(key)) {
+            if (keySet.has(d)) visit(d)
+        }
+        path.pop()
+        visited.add(key)
+    }
+
+    for (const k of computedKeys) {
+        if (!visited.has(k)) visit(k)
+    }
+}
+
+/** Returns computed keys in topological order (dependencies first). */
+function topologicalSort(
+    computedKeys: string[],
+    getDeps: (key: string) => Set<string>
+): string[] {
+    const result: string[] = []
+    const visited = new Set<string>()
+    const keySet = new Set(computedKeys)
+
+    function visit(k: string): void {
+        if (visited.has(k)) return
+        visited.add(k)
+        for (const d of getDeps(k)) {
+            if (keySet.has(d)) visit(d)
+        }
+        result.push(k)
+    }
+
+    for (const k of computedKeys) {
+        visit(k)
+    }
+    // Result is post-order (deps pushed first), which is dependencies-first
+    return result
+}
 
 /**
  * Creates a reactive store with auto-tracking features via Proxies.
@@ -19,9 +75,11 @@ export function createStore<D extends object>(
         definition as D & { actions?: Record<string, (...args: unknown[]) => unknown> }
 
     const engines = new Map<string, IAsyncEngine<unknown>>()
-    const initialState = { ...initialData } as StoreState<D>
+    const computedEngines = new Map<string, ComputedEngine<unknown>>()
+    const computedKeys = new Set<string>()
+    const stateObj: Record<string, unknown> = { ...initialData }
 
-    // Detect and initialize async values
+    // 1. Detect and initialize async values
     Object.keys(initialData).forEach(key => {
         const val = (initialData as Record<string, unknown>)[key]
         if (val && typeof val === 'object' && ASYNC_VALUE_MARKER in val) {
@@ -30,14 +88,44 @@ export function createStore<D extends object>(
                 store.setState({ [key]: nodeState } as Partial<StoreState<D>>)
             })
             engines.set(key, engine)
-                ; (initialState as Record<string, unknown>)[key] = engine.getState()
+            stateObj[key] = engine.getState()
         }
     })
+
+    // 2. Detect computed values: collect engines with deps (state has no computed keys yet)
+    Object.keys(initialData).forEach(key => {
+        const val = (initialData as Record<string, unknown>)[key]
+        if (val && typeof val === 'object' && COMPUTED_MARKER in val) {
+            const comp = val as { [COMPUTED_MARKER]: true; fn: (state: unknown) => unknown }
+            computedKeys.add(key)
+            delete stateObj[key]
+            const { result, deps } = trackDependencies(stateObj, comp.fn)
+            computedEngines.set(key, { fn: comp.fn, value: result, deps, dirty: false })
+        }
+    })
+
+    const computedKeysList = Array.from(computedKeys)
+    let topoOrder: string[] = []
+    if (computedKeysList.length > 0) {
+        const getDeps = (k: string) => computedEngines.get(k)!.deps
+        detectCircular(computedKeysList, getDeps)
+        topoOrder = topologicalSort(computedKeysList, getDeps)
+        for (const key of topoOrder) {
+            const engine = computedEngines.get(key)!
+            const { result, deps } = trackDependencies(stateObj, engine.fn)
+            engine.value = result
+            engine.deps = deps
+            stateObj[key] = result
+        }
+    }
+
+    const initialState = stateObj as StoreState<D>
 
     const listeners = new Set<Listener<StoreState<D>>>()
     let currentState = initialState as StoreState<D>
     let batchCount = 0
     let batchDirty = false
+    let pendingChangedKeys = new Set<string>()
     let lastSnapshot: StoreState<D> | null = null
     let lastSnapshotState: StoreState<D> | null = null
 
@@ -46,6 +134,44 @@ export function createStore<D extends object>(
         batchDirty = false
         listeners.forEach(listener => listener(currentState))
     }
+
+    const runRecomputeDirty = (changedKeys: Set<string>) => {
+        topoOrder.forEach((key) => {
+            const engine = computedEngines.get(key)!
+            for (const d of engine.deps) {
+                if (changedKeys.has(d)) {
+                    engine.dirty = true
+                    break
+                }
+            }
+        })
+        topoOrder.forEach((key) => {
+            const engine = computedEngines.get(key)!
+            if (!engine.dirty) return
+            const oldValue = engine.value
+            const { result, deps } = trackDependencies(currentState as Record<string, unknown>, engine.fn)
+            engine.value = result
+            engine.deps = deps
+            engine.dirty = false
+            ;(currentState as Record<string, unknown>)[key] = result
+            if (result !== oldValue) {
+                topoOrder.forEach((other) => {
+                    if (other === key) return
+                    if (computedEngines.get(other)!.deps.has(key)) computedEngines.get(other)!.dirty = true
+                })
+            }
+        })
+    }
+
+    // Subscribe to global batch end (teardown not used; store lives for app lifetime)
+    subscribeToBatch(() => {
+        if (batchDirty) {
+            batchDirty = false
+            runRecomputeDirty(pendingChangedKeys)
+            pendingChangedKeys = new Set()
+            notify()
+        }
+    })
 
     const proxyState = createStateProxy(initialState, notify)
 
@@ -72,21 +198,39 @@ export function createStore<D extends object>(
 
         if (nextState === currentState) return
 
+        // Strip computed keys (read-only): silently ignore
+        const writableNext = { ...nextState } as Record<string, unknown>
+        computedKeys.forEach((k) => delete writableNext[k])
         const prevState = currentState
-        currentState = nextState
+        const updatedKeys = new Set(
+            Object.keys(writableNext).filter(
+                (k) => (prevState as Record<string, unknown>)[k] !== writableNext[k]
+            )
+        )
+        if (updatedKeys.size === 0) return
+
+        currentState = { ...currentState, ...writableNext } as StoreState<D>
+
+        if (batchCount > 0 || isBatching()) {
+            updatedKeys.forEach((k) => pendingChangedKeys.add(k))
+            batchDirty = true
+        } else {
+            runRecomputeDirty(updatedKeys)
+        }
+
         lastSnapshot = null
         lastSnapshotState = null
 
         // Sync proxy state — suppress proxy-triggered notifications during sync
         batchCount++
         try {
-            for (const key in nextState) {
+            for (const key in currentState) {
                 if (
-                    Object.prototype.hasOwnProperty.call(nextState, key) &&
-                    (nextState as Record<string, unknown>)[key] !== (prevState as Record<string, unknown>)[key]   // ← skip unchanged keys
+                    Object.prototype.hasOwnProperty.call(currentState, key) &&
+                    (currentState as Record<string, unknown>)[key] !== (prevState as Record<string, unknown>)[key]
                 ) {
                     (proxyState as Record<string, unknown>)[key] =
-                        nextState[key as keyof StoreState<D>]
+                        currentState[key as keyof StoreState<D>]
                 }
             }
         } finally {
@@ -127,6 +271,8 @@ export function createStore<D extends object>(
                 batchCount--
                 if (batchCount === 0 && batchDirty) {
                     batchDirty = false
+                    runRecomputeDirty(pendingChangedKeys)
+                    pendingChangedKeys = new Set()
                     notify()
                 }
             }

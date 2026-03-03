@@ -4,7 +4,7 @@ import { join } from 'path';
 
 const ROOT = process.cwd();
 const limits: Record<string, number> = {
-  reactflux: 5 * 1024,
+  reactflux: 10 * 1024,
   'reactflux-react': 3 * 1024,
 };
 

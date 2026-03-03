@@ -1,5 +1,10 @@
+import type { ComputedValue } from './computed';
+
 /** @internal */
 export const ASYNC_VALUE_MARKER = '__rf_async';
+
+/** Re-export for consumers. Defined in computed.ts. */
+export type { ComputedValue } from './computed';
 
 /**
  * Status of an async operation.
@@ -51,11 +56,25 @@ export interface AsyncValue<T> {
     init: (onUpdate: (s: AsyncState<T>) => void) => IAsyncEngine<T>;
 }
 
+/** Keys of the definition that are computed values (read-only in setState). */
+export type ComputedKeys<D> = {
+    [K in keyof Omit<D, 'actions'>]: Omit<D, 'actions'>[K] extends ComputedValue<unknown> ? K : never;
+}[keyof Omit<D, 'actions'>];
+
 /**
- * Utility to extract state, omitting the actions key and unwrapping AsyncValues.
+ * State shape with computed keys omitted. Use for setState payloads so TS flags setting computed keys.
+ */
+export type WritableStoreState<D> = Omit<StoreState<D>, ComputedKeys<D>>;
+
+/**
+ * Utility to extract state, omitting the actions key and unwrapping AsyncValues and ComputedValues.
  */
 export type StoreState<D> = {
-    [K in keyof Omit<D, 'actions'>]: D[K] extends AsyncValue<infer T> ? AsyncState<T> : D[K];
+    [K in keyof Omit<D, 'actions'>]: Omit<D, 'actions'>[K] extends AsyncValue<infer T>
+        ? AsyncState<T>
+        : Omit<D, 'actions'>[K] extends ComputedValue<infer T>
+          ? T
+          : Omit<D, 'actions'>[K];
 };
 
 /**
@@ -96,11 +115,12 @@ export type Store<D extends object> = {
     getState: () => StoreState<D>;
     /**
      * Updates the state. Supports partial objects, updaters, and Immer mutators.
+     * Computed keys are read-only; passing them in the payload is a type error and is ignored at runtime.
      */
     setState: (
         updater:
-            | Partial<StoreState<D>>
-            | ((state: StoreState<D>) => Partial<StoreState<D>>)
+            | Partial<WritableStoreState<D>>
+            | ((state: StoreState<D>) => Partial<WritableStoreState<D>>)
             | ((draft: StoreState<D>) => void)
     ) => void;
     /**
