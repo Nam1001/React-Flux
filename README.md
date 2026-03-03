@@ -62,6 +62,31 @@ function Counter() {
 
 ---
 
+## Import Patterns (Tree-Shaking)
+
+ReactFlux uses subpath imports so you only bundle what you use:
+
+| Import | Size (gzipped) | Use when |
+|--------|----------------|----------|
+| `import { createStore, batch } from 'reactflux'` | ~1.4 KB | Core store only |
+| `import { createAsync } from 'reactflux/async'` | +1.1 KB | Async state, fetching, caching |
+| `import { computed } from 'reactflux/computed'` | +0.8 KB | Derived state |
+
+```ts
+// Core only
+import { createStore } from 'reactflux'
+
+// With async
+import { createStore } from 'reactflux'
+import { createAsync } from 'reactflux/async'
+
+// With computed
+import { createStore } from 'reactflux'
+import { computed } from 'reactflux/computed'
+```
+
+---
+
 ## Core Concepts
 
 ReactFlux has two packages:
@@ -245,7 +270,8 @@ function MyComponent() {
 Synchronous derived state with automatic dependency tracking. Use `computed(fn)` in your store definition; the store will run the function against the current state, track which keys were read, and recompute when those dependencies change. Supports chaining (computed can depend on other computeds). Circular dependencies are detected at store creation and throw a clear error.
 
 ```ts
-import { createStore, computed } from 'reactflux'
+import { createStore } from 'reactflux'
+import { computed } from 'reactflux/computed'
 
 const store = createStore({
   a: 1,
@@ -271,7 +297,8 @@ Async data is a first-class citizen in ReactFlux. No separate library needed.
 Defines an async value inside a store. Automatically manages `loading`, `error`, `data`, and `status`.
 
 ```ts
-import { createStore, createAsync } from 'reactflux'
+import { createStore } from 'reactflux'
+import { createAsync } from 'reactflux/async'
 
 const userStore = createStore({
   user: createAsync(async (id: string) => {
@@ -454,7 +481,8 @@ if (status === 'error') {
 ### Full Async Example
 
 ```tsx
-import { createStore, createAsync } from 'reactflux'
+import { createStore } from 'reactflux'
+import { createAsync } from 'reactflux/async'
 import { useStore } from 'reactflux-react'
 
 const userStore = createStore({

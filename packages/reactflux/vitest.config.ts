@@ -12,7 +12,7 @@ export default defineConfig({
                 lines: 95,
             },
             include: ['src/**/*.ts'],
-            exclude: ['src/index.ts'],
+            exclude: ['src/index.ts', 'src/async-entry.ts', 'src/computed-entry.ts'],
         },
         reporters: ['verbose'],
     },

@@ -1,16 +1,26 @@
 import typescript from '@rollup/plugin-typescript';
+import terser from '@rollup/plugin-terser';
+import { visualizer } from 'rollup-plugin-visualizer';
+
+const analyze = process.env.ANALYZE === 'true';
 
 export default {
-    input: 'src/index.ts',
+    input: {
+        index: 'src/index.ts',
+        async: 'src/async-entry.ts',
+        computed: 'src/computed-entry.ts',
+    },
     output: [
         {
-            file: 'dist/index.cjs',
-            format: 'cjs',
+            dir: 'dist',
+            format: 'es',
+            entryFileNames: '[name].mjs',
             sourcemap: true,
         },
         {
-            file: 'dist/index.mjs',
-            format: 'es',
+            dir: 'dist',
+            format: 'cjs',
+            entryFileNames: '[name].cjs',
             sourcemap: true,
         },
     ],
@@ -20,5 +30,7 @@ export default {
             declaration: true,
             declarationDir: 'dist',
         }),
-    ],
+        terser(),
+        analyze && visualizer({ filename: 'dist/stats.html', gzipSize: true }),
+    ].filter(Boolean),
 };

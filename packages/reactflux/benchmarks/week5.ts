@@ -1,4 +1,6 @@
-import { createStore, createAsync, computed } from '../src'
+import { createStore } from '../src'
+import { createAsync } from '../src/async'
+import { computed } from '../src/computed'
 
 interface BenchmarkResult {
     operation: string
