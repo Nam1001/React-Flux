@@ -1,4 +1,5 @@
 import { AsyncValue, AsyncOptions, AsyncState, AsyncStatus, ASYNC_VALUE_MARKER, IAsyncEngine } from './types';
+import { registerExtension } from './registry';
 
 /**
  * Creates an async value definition for use in createStore.
@@ -189,4 +190,51 @@ export class AsyncEngine<T> implements IAsyncEngine<T> {
         this.onUpdate(this.getState());
     }
 }
+
+// Register async extension when module is imported (order 0 = runs before computed)
+registerExtension({
+    key: 'async',
+    order: 0,
+    processDefinition: (definition) => {
+        const state: Record<string, unknown> = {};
+        const asyncInits: Array<{ key: string; init: (onUpdate: (state: unknown) => void) => unknown }> = [];
+        for (const key of Object.keys(definition)) {
+            const val = definition[key];
+            if (val && typeof val === 'object' && ASYNC_VALUE_MARKER in val) {
+                const asyncVal = val as unknown as AsyncValue<unknown>;
+                asyncInits.push({ key, init: asyncVal.init });
+            } else {
+                state[key] = val;
+            }
+        }
+        return { state, asyncInits };
+    },
+    extendStore: (ctx) => {
+        const engines = ctx.engines as Map<string, IAsyncEngine<unknown>>;
+        return {
+            fetch: async (key: string, ...args: unknown[]) => {
+                if (!engines.has(key)) {
+                    throw new Error(`ReactFlux: no async key "${key}" found in store`);
+                }
+                const engine = engines.get(key);
+                if (engine) await engine.fetch(...args);
+            },
+            refetch: async (key: string) => {
+                const engine = engines.get(key);
+                if (engine) await engine.refetch();
+            },
+            invalidate: (key: string) => {
+                const engine = engines.get(key);
+                if (engine) engine.invalidate();
+            },
+            invalidateAll: () => {
+                engines.forEach((engine) => engine.invalidate());
+            },
+            getAsyncState: (key: string) => {
+                const engine = engines.get(key);
+                return engine ? engine.getState() : undefined;
+            },
+        };
+    },
+});
 
