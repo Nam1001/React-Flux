@@ -130,7 +130,10 @@ export function createStore<D extends object>(
     let lastSnapshotState: StoreState<D> | null = null
 
     const notify = () => {
-        if (batchCount > 0) return
+        if (batchCount > 0 || isBatching()) {
+            batchDirty = true
+            return
+        }
         batchDirty = false
         listeners.forEach(listener => listener(currentState))
     }
@@ -259,7 +262,12 @@ export function createStore<D extends object>(
 
         subscribe: (listener: Listener<StoreState<D>>) => {
             listeners.add(listener)
-            return () => { listeners.delete(listener) }
+            return () => {
+                listeners.delete(listener)
+                if (listeners.size === 0) {
+                    unsubscribeBatch()
+                }
+            }
         },
 
         // ✅ Fix 3: batch uses its own batchCount increment
