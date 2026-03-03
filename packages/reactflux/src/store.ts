@@ -125,6 +125,7 @@ export function createStore<D extends object>(
     let currentState = initialState as StoreState<D>
     let batchCount = 0
     let batchDirty = false
+    let unsubscribeBatch: (() => void) | null = null
     let pendingChangedKeys = new Set<string>()
     let lastSnapshot: StoreState<D> | null = null
     let lastSnapshotState: StoreState<D> | null = null
@@ -165,16 +166,6 @@ export function createStore<D extends object>(
             }
         })
     }
-
-    // Subscribe to global batch end (teardown not used; store lives for app lifetime)
-    subscribeToBatch(() => {
-        if (batchDirty) {
-            batchDirty = false
-            runRecomputeDirty(pendingChangedKeys)
-            pendingChangedKeys = new Set()
-            notify()
-        }
-    })
 
     const proxyState = createStateProxy(initialState, notify)
 
@@ -262,10 +253,27 @@ export function createStore<D extends object>(
 
         subscribe: (listener: Listener<StoreState<D>>) => {
             listeners.add(listener)
+            if (listeners.size === 1) {
+                unsubscribeBatch = subscribeToBatch(() => {
+                    if (batchDirty) {
+                        batchDirty = false
+                        runRecomputeDirty(pendingChangedKeys)
+                        pendingChangedKeys = new Set()
+                        notify()
+                    }
+                })
+                if (batchDirty) {
+                    batchDirty = false
+                    runRecomputeDirty(pendingChangedKeys)
+                    pendingChangedKeys = new Set()
+                    notify()
+                }
+            }
             return () => {
                 listeners.delete(listener)
                 if (listeners.size === 0) {
-                    unsubscribeBatch()
+                    unsubscribeBatch?.()
+                    unsubscribeBatch = null
                 }
             }
         },
