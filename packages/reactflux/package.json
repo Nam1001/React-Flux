@@ -9,6 +9,16 @@
             "types": "./dist/index.d.ts",
             "import": "./dist/index.mjs",
             "require": "./dist/index.cjs"
+        },
+        "./async": {
+            "types": "./dist/async-entry.d.ts",
+            "import": "./dist/async.mjs",
+            "require": "./dist/async.cjs"
+        },
+        "./computed": {
+            "types": "./dist/computed-entry.d.ts",
+            "import": "./dist/computed.mjs",
+            "require": "./dist/computed.cjs"
         }
     },
     "scripts": {
@@ -19,10 +29,13 @@
         "bench:week4": "npx tsx benchmarks/week4.ts",
         "bench:week5": "npx tsx benchmarks/week5.ts",
         "lint": "eslint src --ext .ts",
-        "build": "rollup -c"
+        "build": "rollup -c",
+        "build:analyze": "rollup -c --environment ANALYZE:true"
     },
     "devDependencies": {
+        "@rollup/plugin-terser": "^0.4.4",
         "@vitest/coverage-v8": "^1.6.1",
+        "rollup-plugin-visualizer": "^5.12.0",
         "tsx": "^4.21.0"
     },
     "peerDependencies": {

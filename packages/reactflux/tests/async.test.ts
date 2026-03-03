@@ -1,6 +1,7 @@
 // packages/reactflux/tests/async.test.ts
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { createStore, createAsync } from '../src'
+import { createStore } from '../src'
+import { createAsync } from '../src/async'
 
 // ─────────────────────────────────────────────
 // TEST UTILITIES

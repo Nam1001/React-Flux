@@ -1,5 +1,6 @@
 import { render, screen, act } from '@testing-library/react'
-import { createStore, computed } from 'reactflux'
+import { createStore } from 'reactflux'
+import { computed } from 'reactflux/computed'
 import { useStore } from '../src/useStore'
 import { expect, it, describe, vi } from 'vitest'
 import React from 'react'

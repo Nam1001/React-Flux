@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [Unreleased]
+
+### Added
+- Tree-shakable architecture — core store has zero knowledge of async/computed
+- Subpath imports: `reactflux`, `reactflux/async`, `reactflux/computed`
+- Extension registry for plugins (internal)
+- `pnpm build:analyze` — generates bundle visualization (stats.html)
+
+### Changed — BREAKING
+- **Barrel import removed.** Use subpath imports:
+  - `import { createStore, batch } from 'reactflux'` — core only (~1.4KB gzipped)
+  - `import { createAsync } from 'reactflux/async'` — async support (~1.1KB gzipped)
+  - `import { computed } from 'reactflux/computed'` — computed support (~0.8KB gzipped)
+- Store without async extension: `fetch()` throws with message to import `reactflux/async`
+
+### Fixed
+- Bundle sizes: core 1.4KB, async 1.1KB, computed 0.8KB (gzipped, with Terser)
+
+---
+
 ## [0.4.0] - 2026-03-02
 ### Added — `reactflux-core`
 - `createAsync(fetcher, options)` — core engine for async state management
