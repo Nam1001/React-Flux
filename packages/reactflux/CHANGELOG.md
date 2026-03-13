@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## v0.4.0
+
+### Added
+- `withPersist` — persist store state with pluggable adapters
+- `localStorageAdapter` — web localStorage adapter
+- `sessionStorageAdapter` — web sessionStorage adapter  
+- `memoryAdapter` — in-memory adapter for SSR and testing
+- `indexedDBAdapter` — async IndexedDB adapter
+- `compose()` — compose multiple store enhancers cleanly
+- Version + migration support for schema changes
+- Configurable debounce on writes
+- SSR safe — all adapters guard against missing window/indexedDB
+
 ## [Unreleased]
 
 ### Added

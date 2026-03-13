@@ -71,6 +71,7 @@ ReactFlux uses subpath imports so you only bundle what you use:
 | `import { createStore, batch } from 'reactflux'` | ~1.4 KB | Core store only |
 | `import { createAsync } from 'reactflux/async'` | +1.1 KB | Async state, fetching, caching |
 | `import { computed } from 'reactflux/computed'` | +0.8 KB | Derived state |
+| `import { withPersist } from 'reactflux/persist'` | +1.2 KB | Persistence, adapters |
 
 ```ts
 // Core only
@@ -514,6 +515,59 @@ function UserProfile({ id }: { id: string }) {
   )
 }
 ```
+---
+
+## Persistence Layer
+
+ReactFlux includes a powerful, tree-shakable persistence layer that automatically syncs your store state to external storage.
+
+### `withPersist(store, options)`
+
+Enhances a store with persistence capabilities. It handles hydration (loading state on startup) and automatic debounced writes on state changes.
+
+```ts
+import { createStore } from 'reactflux'
+import { withPersist } from 'reactflux/persist'
+import { localStorageAdapter } from 'reactflux/persist/adapters/localStorage'
+
+const store = withPersist(
+  createStore({ count: 0 }),
+  {
+    key: 'my-app-store',
+    adapter: localStorageAdapter(),
+    pick: ['count'], // optional: only persist these keys
+    version: 1,      // optional: for schema migrations
+    debounce: 100,   // optional: ms to wait before saving (default: 100)
+  }
+)
+
+// Wait for hydration if you need to know when data is loaded
+await store.hydrated
+```
+
+### Adapters
+
+ReactFlux comes with several built-in adapters, all SSR-safe:
+
+- **`localStorageAdapter()`**: Persist to `window.localStorage`.
+- **`sessionStorageAdapter()`**: Persist to `window.sessionStorage`.
+- **`indexedDBAdapter()`**: Async persistence to IndexedDB for larger datasets.
+- **`memoryAdapter()`**: In-memory storage, useful for testing or SSR environments.
+
+### Composing Enhancers
+
+Use `withPersist` as a higher-order function for clean composition:
+
+```ts
+import { createStore } from 'reactflux'
+import { withPersist } from 'reactflux/persist'
+import { localStorageAdapter } from 'reactflux/persist/adapters/localStorage'
+
+const store = withPersist({ 
+  key: 'app', 
+  adapter: localStorageAdapter() 
+})(createStore({ count: 0 }))
+```
 
 ---
 
@@ -602,6 +656,19 @@ All benchmarks run on Apple MacBook Air, 100,000 iterations with 1,000 warmup it
 | `batch()` 3× setState, 1 notify | 0.00120ms |
 | `batch()` 10× setState, 1 notify | 0.00536ms |
 
+### Async & Computed (Week 5)
+
+| Operation | Average Time | Threshold |
+|---|---|---|
+| `createAsync()` initialization | 0.00025ms | < 0.1ms |
+| `fetch()` - cache hit (TTL) | 0.00065ms | < 0.1ms |
+| `fetch()` - cache miss (resolved) | 0.00657ms | < 1.0ms |
+| `refetch()` overhead | 0.00655ms | < 0.1ms |
+| `optimistic` - immediate change | 0.00452ms | < 0.2ms |
+| `computed` read | 0.00001ms | < 0.1ms |
+| `computed` recompute (1 dep) | 0.00212ms | < 0.1ms |
+| `computed` 3-level chain | 0.00337ms | < 0.5ms |
+
 ---
 
 ## TypeScript
@@ -642,9 +709,10 @@ userStore.getState().user.status      // inferred as 'idle' | 'loading' | 'succe
 | `async.ts` | 98.44% | 95.83% | 100% | 98.44% |
 | `proxy.ts` | 100% | 100% | 100% | 100% |
 | `store.ts` | 98.3% | 95%+ | 100% | 98.3% |
-| **Total** | **98.68%** | **95%+** | **100%** | **98.68%** |
+| `persist/` | 99.6% | 92%+ | 100% | 99.6% |
+| **Total** | **98.3%** | **95%+** | **95%+** | **98.3%** |
 
-409 tests across 7 test files. Zero known bugs.
+665 tests across 21 test files. Zero known bugs.
 
 ---
 
@@ -654,10 +722,10 @@ userStore.getState().user.status      // inferred as 'idle' | 'loading' | 'succe
 |---|---|---|
 | v0.1–v0.3 | Core store + React adapter + Immer + Actions | ✅ Done |
 | v0.4 | Async state — `createAsync`, TTL, SWR, optimistic | ✅ Done |
-| v0.5 | Computed values — `computed()`, auto-memoization | 🔨 Next |
-| v0.6 | TypeScript hardening — full inference, strict types | 📋 Planned |
-| v0.7 | Time-travel — `undo()`, `redo()`, named snapshots | 📋 Planned |
-| v0.8 | Persistence — localStorage, sessionStorage, IndexedDB | 📋 Planned |
+| v0.5 | Computed values — `computed()`, auto-memoization | ✅ Done |
+| v0.6 | Persistence — localStorage, sessionStorage, IndexedDB | ✅ Done |
+| v0.7 | TypeScript hardening — full inference, strict types | 🔨 Next |
+| v0.8 | Time-travel — `undo()`, `redo()`, named snapshots | 📋 Planned |
 | v0.9 | DevTools + Signals | 📋 Planned |
 | v1.0 | Docs site, launch, stable API | 📋 Planned |
 

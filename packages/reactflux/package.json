@@ -19,6 +19,31 @@
             "types": "./dist/computed-entry.d.ts",
             "import": "./dist/computed.mjs",
             "require": "./dist/computed.cjs"
+        },
+        "./persist": {
+            "types": "./dist/persist/index.d.ts",
+            "import": "./dist/persist.mjs",
+            "require": "./dist/persist.cjs"
+        },
+        "./persist/adapters/localStorage": {
+            "types": "./dist/persist/adapters/localStorage.d.ts",
+            "import": "./dist/adapters/localStorage.mjs",
+            "require": "./dist/adapters/localStorage.cjs"
+        },
+        "./persist/adapters/sessionStorage": {
+            "types": "./dist/persist/adapters/sessionStorage.d.ts",
+            "import": "./dist/adapters/sessionStorage.mjs",
+            "require": "./dist/adapters/sessionStorage.cjs"
+        },
+        "./persist/adapters/memory": {
+            "types": "./dist/persist/adapters/memory.d.ts",
+            "import": "./dist/adapters/memory.mjs",
+            "require": "./dist/adapters/memory.cjs"
+        },
+        "./persist/adapters/indexedDB": {
+            "types": "./dist/persist/adapters/indexedDB.d.ts",
+            "import": "./dist/adapters/indexedDB.mjs",
+            "require": "./dist/adapters/indexedDB.cjs"
         }
     },
     "scripts": {

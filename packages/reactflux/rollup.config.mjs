@@ -9,6 +9,11 @@ export default {
         index: 'src/index.ts',
         async: 'src/async-entry.ts',
         computed: 'src/computed-entry.ts',
+        persist: 'src/persist/index.ts',
+        'adapters/localStorage': 'src/persist/adapters/localStorage.ts',
+        'adapters/sessionStorage': 'src/persist/adapters/sessionStorage.ts',
+        'adapters/memory': 'src/persist/adapters/memory.ts',
+        'adapters/indexedDB': 'src/persist/adapters/indexedDB.ts',
     },
     output: [
         {
