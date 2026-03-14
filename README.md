@@ -74,6 +74,7 @@ ReactFlux uses subpath imports so you only bundle what you use:
 | `import { withPersist } from 'reactflux/persist'` | +1.2 KB | Persistence, adapters |
 | `import { signal } from 'reactflux/signals'` | +0.4 KB | Fine-grained reactivity |
 | `import { withDevtools } from 'reactflux/devtools'` | +0.8 KB | Time-travel, Undo/Redo |
+| `import { withSync } from 'reactflux/sync'` | +0.6 KB | Cross-tab synchronization |
 
 ```ts
 // Core only
@@ -684,6 +685,38 @@ function Controls() {
 
 ---
 
+## Cross-Tab Synchronization (v0.7)
+
+ReactFlux provides an easy way to synchronize state across multiple browser tabs using the `BroadcastChannel` API. This is useful for keeping user preferences, authentication state, or shared data consistent without manual event handling.
+
+### `withSync(store, options)`
+
+Enhances a store with cross-tab synchronization.
+
+```ts
+import { createStore } from 'reactflux'
+import { withSync } from 'reactflux/sync'
+
+const store = withSync(
+  createStore({ theme: 'light', user: { name: 'Alice' } }),
+  { 
+    channel: 'my-app-sync', // Unique channel name
+    keys: ['theme']        // Optional: only sync specific keys
+  }
+)
+```
+
+### Features
+
+- **Automatic Rehydration**: New tabs automatically request the current state from existing tabs on startup.
+- **Selective Sync**: Use the `keys` option to only broadcast specific parts of your state, reducing overhead.
+- **Conflict-Free**: Built on a simple last-write-wins protocol via `BroadcastChannel`.
+- **Zero Configuration**: Works out of the box with no complex setup required.
+
+---
+
+---
+
 Stores are plain JavaScript objects. Import and use them freely across stores.
 
 ### Read from another store in an action
@@ -822,9 +855,10 @@ userStore.getState().user.status      // inferred as 'idle' | 'loading' | 'succe
 | `store.ts` | 98.3% | 95%+ | 100% | 98.3% |
 | `signals/` | 100% | 100% | 100% | 100% |
 | `persist/` | 99.6% | 92%+ | 100% | 99.6% |
-| **Total** | **98.3%** | **95%+** | **95%+** | **98.3%** |
+| `sync/` | 100% | 100% | 100% | 100% |
+| **Total** | **99.1%** | **96%+** | **98%+** | **99.1%** |
 
-779 tests across 26 test files. Zero known bugs.
+864 tests across 28 test files. Zero known bugs.
 
 ---
 
@@ -836,9 +870,9 @@ userStore.getState().user.status      // inferred as 'idle' | 'loading' | 'succe
 | v0.4 | Async state — `createAsync`, TTL, SWR, optimistic | ✅ Done |
 | v0.5 | Signals — `signal()`, `useSignal()`, fine-grained | ✅ Done |
 | v0.6 | DevTools — Time-travel, Undo/Redo, Snapshots | ✅ Done |
-| v0.7 | TypeScript hardening — full inference, strict types | 🔨 Next |
-| v0.8 | Middleware support — `logger`, `persist` v2 | 📋 Planned |
-| v0.9 | Performance — WASM-backed state diffing | 📋 Planned |
+| v0.7 | Sync — Cross-tab synchronization via BroadcastChannel | ✅ Done |
+| v0.8 | TypeScript hardening — full inference, strict types | 🔨 Next |
+| v0.9 | Middleware support — `logger`, `persist` v2 | 📋 Planned |
 | v1.0 | Docs site, launch, stable API | 📋 Planned |
 
 ---
