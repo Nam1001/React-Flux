@@ -1,5 +1,5 @@
 import { useSyncExternalStore, useCallback } from 'react';
-import type { Store } from 'storve';
+import type { Store } from '@storve/core';
 
 /**
  * A single entry in the devtools history buffer.

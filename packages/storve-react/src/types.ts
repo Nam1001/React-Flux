@@ -1,4 +1,4 @@
-import type { Store, StoreState, StoreActions } from 'storve'
+import type { Store, StoreState, StoreActions } from '@storve/core'
 
 /**
  * Selector function — derives a value from store state

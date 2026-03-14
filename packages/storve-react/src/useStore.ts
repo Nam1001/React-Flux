@@ -1,5 +1,5 @@
 import { useSyncExternalStore, useRef, useCallback } from 'react'
-import type { Store, StoreState } from 'storve'
+import type { Store, StoreState } from '@storve/core'
 import type { Selector, UseStoreResult } from './types'
 
 export function shallowEqual(a: unknown, b: unknown): boolean {

@@ -1,5 +1,5 @@
 {
-    "name": "storve",
+    "name": "@storve/core",
     "version": "1.0.0",
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",

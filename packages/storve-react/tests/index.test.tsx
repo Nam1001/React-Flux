@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react'
-import { createStore } from 'storve'
+import { createStore } from '@storve/core'
 import { useStore } from '../src/index'
 import type { Selector } from '../src/index'
 import { expect, it, describe } from 'vitest'

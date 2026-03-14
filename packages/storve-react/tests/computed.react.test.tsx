@@ -1,6 +1,6 @@
 import { render, screen, act } from '@testing-library/react'
-import { createStore } from 'storve'
-import { computed } from 'storve/computed'
+import { createStore } from '@storve/core'
+import { computed } from '@storve/core/computed'
 import { useStore } from '../src/useStore'
 import { expect, it, describe, vi } from 'vitest'
 import React from 'react'

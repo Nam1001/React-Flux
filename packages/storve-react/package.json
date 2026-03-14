@@ -1,5 +1,5 @@
 {
-    "name": "storve-react",
+    "name": "@storve/react",
     "version": "1.0.0",
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
@@ -19,9 +19,11 @@
         "test:bench": "npx tsx benchmarks/week3.ts",
         "lint": "eslint src --ext .ts,.tsx"
     },
+    "dependencies": {
+        "@storve/core": "1.0.0"
+    },
     "peerDependencies": {
-        "react": ">=18.0.0",
-        "storve": ">=1.0.0"
+        "react": ">=18.0.0"
     },
     "devDependencies": {
         "@testing-library/jest-dom": "^6.9.1",
@@ -32,7 +34,6 @@
         "jsdom": "^24.1.3",
         "react": "^18.3.1",
         "react-dom": "^18.3.1",
-        "storve": "workspace:*",
         "tsx": "^4.21.0",
         "vitest": "^2.1.0"
     }

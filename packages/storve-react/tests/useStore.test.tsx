@@ -1,5 +1,5 @@
 import { render, screen, act } from '@testing-library/react'
-import { createStore, type Store } from 'storve'
+import { createStore, type Store } from '@storve/core'
 import { useStore, shallowEqual } from '../src/useStore'
 import { expect, it, describe, vi } from 'vitest'
 import React from 'react'

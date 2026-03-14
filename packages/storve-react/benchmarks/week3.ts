@@ -1,5 +1,5 @@
 import { performance } from 'perf_hooks'
-import { createStore } from 'storve'
+import { createStore } from '@storve/core'
 
 type BenchmarkResult = {
   operation: string
