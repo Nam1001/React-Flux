@@ -1,3 +1,5 @@
+import type { Store } from './types';
+
 /**
  * Extension registry for store plugins.
  * Features register when imported; createStore applies all registered extensions.
@@ -15,12 +17,17 @@ export interface ProcessDefinitionResult {
         changedKeys: Set<string>;
         getState: () => Record<string, unknown>;
         setComputed: (key: string, value: unknown) => void;
+        store: unknown;
     }) => void;
 }
 
 export interface ExtensionContext {
     engines: Map<string, unknown>;
+    store: Store<object>;
+    definition: object;
 }
+
+
 
 export interface StoreExtension {
     /** Unique key to avoid double registration */

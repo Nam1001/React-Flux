@@ -19,6 +19,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Configurable debounce on writes
 - SSR safe — all adapters guard against missing window/indexedDB
 
+## [0.6.0] - 2026-03-14
+
+### Added
+- `reactflux/devtools` entry point for time-travel debugging.
+- `withDevtools` store enhancer for ring-buffer history and Redux DevTools integration.
+- `undo()` and `redo()` API on stores.
+- `canUndo` and `canRedo` flags.
+- `snapshot()` and `restore()` for named state checkpoints.
+- `useDevtools` React hook for reactive access to devtools state.
+- Redux DevTools extension support (JUMP_TO_STATE, RESET).
+
+### Fixed
+- Internal: extensions now receive the store instance and original definition.
+- Internal: added `Object.defineProperties` support for extension method merging.
+- Internal: triggered initial state change notification for early extension initialization.
+
 ## [0.5.0] - 2026-03-14
 
 ### Added — `reactflux/signals`
