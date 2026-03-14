@@ -4,12 +4,14 @@
 
 A fast, minimal-boilerplate React state management library with first-class async support, auto-tracking, and built-in caching. Replaces both Zustand and TanStack Query with a single cohesive API.
 
+[![npm (scoped)](https://img.shields.io/npm/v/@storve/core.svg)](https://www.npmjs.com/package/@storve/core)
+[![npm (scoped)](https://img.shields.io/npm/v/@storve/react.svg)](https://www.npmjs.com/package/@storve/react)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18%2B-61dafb)](https://react.dev/)
 [![Coverage](https://img.shields.io/badge/coverage-99%25-brightgreen)]()
 [![Core size](https://img.shields.io/badge/core-1.4KB-success)]()
-[![Tests](https://img.shields.io/badge/tests-937%20passing-success)]()
+[![Tests](https://img.shields.io/badge/tests-998%20passing-success)]()
 
 ---
 
@@ -29,13 +31,13 @@ A fast, minimal-boilerplate React state management library with first-class asyn
 
 ```bash
 # npm
-npm install storve storve-react
+npm install @storve/core @storve/react
 
 # pnpm
-pnpm add storve storve-react
+pnpm add @storve/core @storve/react
 
 # yarn
-yarn add storve storve-react
+yarn add @storve/core @storve/react
 ```
 
 **Peer dependencies:** React 18+
@@ -46,19 +48,19 @@ yarn add storve storve-react
 
 **1. Install**
 ```bash
-npm install storve storve-react
+npm install @storve/core @storve/react
 ```
 
 **2. Create a store**
 ```ts
-import { createStore } from 'storve'
+import { createStore } from '@storve/core'
 
 const counterStore = createStore({ count: 0 })
 ```
 
 **3. Use it in a component**
 ```tsx
-import { useStore } from 'storve-react'
+import { useStore } from '@storve/react'
 
 function Counter() {
   const count = useStore(counterStore, s => s.count)
@@ -72,7 +74,7 @@ function Counter() {
 
 **4. Add async data**
 ```ts
-import { createAsync } from 'storve/async'
+import { createAsync } from '@storve/core/async'
 
 const userStore = createStore({
   user: createAsync(async (id: string) => {
@@ -88,7 +90,7 @@ userStore.getState().user.status // 'success'
 
 That's it. No actions, reducers, or providers needed.
 
-➡️ [Try it on StackBlitz](STACKBLITZ_URL)
+➡️ *StackBlitz demo coming soon*
 
 ---
 
@@ -97,8 +99,8 @@ That's it. No actions, reducers, or providers needed.
 ## Quick Start
 
 ```tsx
-import { createStore } from 'storve'
-import { useStore } from 'storve-react'
+import { createStore } from '@storve/core'
+import { useStore } from '@storve/react'
 
 // 1. Create a store
 const counterStore = createStore({ count: 0 })
@@ -122,25 +124,25 @@ Storve uses subpath imports so you only bundle what you use:
 
 | Import | Size (gzipped) | Use when |
 |--------|----------------|----------|
-| `import { createStore, batch } from 'storve'` | ~1.4 KB | Core store only |
-| `import { createAsync } from 'storve/async'` | +1.1 KB | Async state, fetching, caching |
-| `import { computed } from 'storve/computed'` | +0.8 KB | Derived state |
-| `import { withPersist } from 'storve/persist'` | +1.2 KB | Persistence, adapters |
-| `import { signal } from 'storve/signals'` | +0.4 KB | Fine-grained reactivity |
-| `import { withDevtools } from 'storve/devtools'` | +0.8 KB | Time-travel, Undo/Redo |
-| `import { withSync } from 'storve/sync'` | +0.6 KB | Cross-tab synchronization |
+| `import { createStore, batch } from '@storve/core'` | ~1.4 KB | Core store only |
+| `import { createAsync } from '@storve/core/async'` | +1.1 KB | Async state, fetching, caching |
+| `import { computed } from '@storve/core/computed'` | +0.8 KB | Derived state |
+| `import { withPersist } from '@storve/core/persist'` | +1.2 KB | Persistence, adapters |
+| `import { signal } from '@storve/core/signals'` | +0.4 KB | Fine-grained reactivity |
+| `import { withDevtools } from '@storve/core/devtools'` | +0.8 KB | Time-travel, Undo/Redo |
+| `import { withSync } from '@storve/core/sync'` | +0.6 KB | Cross-tab synchronization |
 
 ```ts
 // Core only
-import { createStore } from 'storve'
+import { createStore } from '@storve/core'
 
 // With async
-import { createStore } from 'storve'
-import { createAsync } from 'storve/async'
+import { createStore } from '@storve/core'
+import { createAsync } from '@storve/core/async'
 
 // With computed
-import { createStore } from 'storve'
-import { computed } from 'storve/computed'
+import { createStore } from '@storve/core'
+import { computed } from '@storve/core/computed'
 ```
 
 ---
@@ -149,8 +151,8 @@ import { computed } from 'storve/computed'
 
 Storve has two packages:
 
-- **`storve`** — the framework-agnostic core store. Works anywhere: React, Node, tests, vanilla JS.
-- **`storve-react`** — the React adapter. Provides `useStore` hook built on `useSyncExternalStore`.
+- **`@storve/core`** — the framework-agnostic core store. Works anywhere: React, Node, tests, vanilla JS.
+- **`@storve/react`** — the React adapter. Provides `useStore` hook built on `useSyncExternalStore`.
 
 ---
 
@@ -161,7 +163,7 @@ Storve has two packages:
 Creates a reactive store. Returns a store instance.
 
 ```ts
-import { createStore } from 'storve'
+import { createStore } from '@storve/core'
 
 const store = createStore({
   count: 0,
@@ -298,12 +300,12 @@ Actions keep business logic in one place instead of scattered across components.
 
 ---
 
-### `useStore(store, selector?)` *(storve-react)*
+### `useStore(store, selector?)` *(@storve/react)*
 
 React hook to consume a store inside a component. Built on `useSyncExternalStore` — safe in React 18 Concurrent Mode with no tearing.
 
 ```tsx
-import { useStore } from 'storve-react'
+import { useStore } from '@storve/react'
 
 function MyComponent() {
   // Subscribe to the entire store
@@ -328,8 +330,8 @@ function MyComponent() {
 Synchronous derived state with automatic dependency tracking. Use `computed(fn)` in your store definition; the store will run the function against the current state, track which keys were read, and recompute when those dependencies change. Supports chaining (computed can depend on other computeds). Circular dependencies are detected at store creation and throw a clear error.
 
 ```ts
-import { createStore } from 'storve'
-import { computed } from 'storve/computed'
+import { createStore } from '@storve/core'
+import { computed } from '@storve/core/computed'
 
 const store = createStore({
   a: 1,
@@ -355,8 +357,8 @@ Async data is a first-class citizen in Storve. No separate library needed.
 Defines an async value inside a store. Automatically manages `loading`, `error`, `data`, and `status`.
 
 ```ts
-import { createStore } from 'storve'
-import { createAsync } from 'storve/async'
+import { createStore } from '@storve/core'
+import { createAsync } from '@storve/core/async'
 
 const userStore = createStore({
   user: createAsync(async (id: string) => {
@@ -539,9 +541,9 @@ if (status === 'error') {
 ### Full Async Example
 
 ```tsx
-import { createStore } from 'storve'
-import { createAsync } from 'storve/async'
-import { useStore } from 'storve-react'
+import { createStore } from '@storve/core'
+import { createAsync } from '@storve/core/async'
+import { useStore } from '@storve/react'
 
 const userStore = createStore({
   user: createAsync(
@@ -583,9 +585,9 @@ Storve includes a powerful, tree-shakable persistence layer that automatically s
 Enhances a store with persistence capabilities. It handles hydration (loading state on startup) and automatic debounced writes on state changes.
 
 ```ts
-import { createStore } from 'storve'
-import { withPersist } from 'storve/persist'
-import { localStorageAdapter } from 'storve/persist/adapters/localStorage'
+import { createStore } from '@storve/core'
+import { withPersist } from '@storve/core/persist'
+import { localStorageAdapter } from '@storve/core/persist/adapters/localStorage'
 
 const store = withPersist(
   createStore({ count: 0 }),
@@ -616,9 +618,9 @@ Storve comes with several built-in adapters, all SSR-safe:
 Use `withPersist` as a higher-order function for clean composition:
 
 ```ts
-import { createStore } from 'storve'
-import { withPersist } from 'storve/persist'
-import { localStorageAdapter } from 'storve/persist/adapters/localStorage'
+import { createStore } from '@storve/core'
+import { withPersist } from '@storve/core/persist'
+import { localStorageAdapter } from '@storve/core/persist/adapters/localStorage'
 
 const store = withPersist({ 
   key: 'app', 
@@ -637,8 +639,8 @@ Signals provide fine-grained reactivity by allowing you to subscribe to a single
 Creates a Signal for a specific store key. Optionally transforms the value.
 
 ```ts
-import { createStore } from 'storve'
-import { signal } from 'storve/signals'
+import { createStore } from '@storve/core'
+import { signal } from '@storve/core/signals'
 
 const store = createStore({ count: 0, user: { name: 'Alice' } })
 
@@ -658,11 +660,11 @@ const doubleSignal = signal(store, 'count', v => v * 2)
 
 ### React Integration: `useSignal(signal)`
 
-The `useSignal` hook (from `storve-react`) subscribes to a signal and returns its value. The component re-renders **ONLY** when that specific signal changes.
+The `useSignal` hook (from `@storve/react`) subscribes to a signal and returns its value. The component re-renders **ONLY** when that specific signal changes.
 
 ```tsx
-import { signal } from 'storve/signals'
-import { useSignal } from 'storve-react'
+import { signal } from '@storve/core/signals'
+import { useSignal } from '@storve/react'
 
 const countSignal = signal(counterStore, 'count')
 
@@ -686,8 +688,8 @@ Storve features a built-in time-travel engine that integrates seamlessly with th
 Enhances a store with history tracking and Redux DevTools integration.
 
 ```ts
-import { createStore } from 'storve'
-import { withDevtools } from 'storve/devtools'
+import { createStore } from '@storve/core'
+import { withDevtools } from '@storve/core/devtools'
 
 const store = withDevtools(
   createStore({ count: 0 }),
@@ -720,10 +722,10 @@ store.restore('before-expensive-op') // Jumps back instantly
 
 ### React Integration: `useDevtools(store)`
 
-The `useDevtools` hook (from `storve-react`) provides a reactive way to access history state, useful for building your own Undo/Redo UI.
+The `useDevtools` hook (from `@storve/react`) provides a reactive way to access history state, useful for building your own Undo/Redo UI.
 
 ```tsx
-import { useDevtools } from 'storve-react'
+import { useDevtools } from '@storve/react'
 
 function Controls() {
   const { canUndo, canRedo, undo, redo } = useDevtools(counterStore)
@@ -748,8 +750,8 @@ Storve provides an easy way to synchronize state across multiple browser tabs us
 Enhances a store with cross-tab synchronization.
 
 ```ts
-import { createStore } from 'storve'
-import { withSync } from 'storve/sync'
+import { createStore } from '@storve/core'
+import { withSync } from '@storve/core/sync'
 
 const store = withSync(
   createStore({ theme: 'light', user: { name: 'Alice' } }),
@@ -912,7 +914,29 @@ userStore.getState().user.status      // inferred as 'idle' | 'loading' | 'succe
 | `sync/` | 100% | 100% | 100% | 100% |
 | **Total** | **99.1%** | **96%+** | **98%+** | **99.1%** |
 
-937 tests across 29 test files. Zero known bugs.
+998 tests across 36 test files. Zero known bugs.
+
+---
+
+## Migrating from pre-1.0 (storve / storve-react)
+
+If you used the old unscoped packages before v1.0, update your imports:
+
+| Old | New |
+|-----|-----|
+| `storve` | `@storve/core` |
+| `storve-react` | `@storve/react` |
+| `storve/async` | `@storve/core/async` |
+| `storve/computed` | `@storve/core/computed` |
+| `storve/persist` | `@storve/core/persist` |
+| `storve/signals` | `@storve/core/signals` |
+| `storve/devtools` | `@storve/core/devtools` |
+| `storve/sync` | `@storve/core/sync` |
+
+```bash
+pnpm remove storve storve-react
+pnpm add @storve/core @storve/react
+```
 
 ---
 
