@@ -15,6 +15,7 @@ export default {
         'adapters/memory': 'src/persist/adapters/memory.ts',
         'adapters/indexedDB': 'src/persist/adapters/indexedDB.ts',
         signals: 'src/signals/index.ts',
+        devtools: 'src/devtools/index.ts',
     },
     output: [
         {
