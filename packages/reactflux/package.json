@@ -1,6 +1,6 @@
 {
     "name": "reactflux",
-    "version": "0.4.0",
+    "version": "0.5.0",
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
     "types": "dist/index.d.ts",
@@ -44,6 +44,11 @@
             "types": "./dist/persist/adapters/indexedDB.d.ts",
             "import": "./dist/adapters/indexedDB.mjs",
             "require": "./dist/adapters/indexedDB.cjs"
+        },
+        "./signals": {
+            "types": "./dist/signals.d.ts",
+            "import": "./dist/signals.mjs",
+            "require": "./dist/signals.cjs"
         }
     },
     "scripts": {
@@ -59,11 +64,18 @@
     },
     "devDependencies": {
         "@rollup/plugin-terser": "^0.4.4",
+        "@testing-library/react": "^16.3.2",
+        "@types/react": "^18.3.3",
+        "@types/react-dom": "^18.3.0",
         "@vitest/coverage-v8": "^1.6.1",
+        "jsdom": "^24.1.3",
+        "react": "^18.3.1",
+        "react-dom": "^18.3.1",
         "rollup-plugin-visualizer": "^5.12.0",
         "tsx": "^4.21.0"
     },
     "peerDependencies": {
-        "immer": ">=10.0.0"
+        "immer": ">=10.0.0",
+        "react": ">=18.0.0"
     }
 }

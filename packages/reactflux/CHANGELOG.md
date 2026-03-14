@@ -19,6 +19,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Configurable debounce on writes
 - SSR safe — all adapters guard against missing window/indexedDB
 
+## [0.5.0] - 2026-03-14
+
+### Added — `reactflux/signals`
+- `signal(store, key)` — fine-grained reactivity for individual store keys
+- `signal(store, key, transform)` — read-only derived signals with automatic dependency filtering
+- `useSignal(signal)` — React hook for zero-overhead subscription to specific state slices
+- `Object.is` value filtering — zero re-renders unless the specific signal value actually changes
+- 100% test coverage for signals package
+- Tree-shakable subpath import: `reactflux/signals`
+- Bundle size: < 0.6KB for signals entry point
+
 ## [Unreleased]
 
 ### Added

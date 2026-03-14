@@ -14,6 +14,7 @@ export default {
         'adapters/sessionStorage': 'src/persist/adapters/sessionStorage.ts',
         'adapters/memory': 'src/persist/adapters/memory.ts',
         'adapters/indexedDB': 'src/persist/adapters/indexedDB.ts',
+        signals: 'src/signals/index.ts',
     },
     output: [
         {
