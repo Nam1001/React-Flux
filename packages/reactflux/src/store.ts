@@ -116,7 +116,9 @@ export function createStore<D extends object>(
                 (k) => (prevState as Record<string, unknown>)[k] !== writableNext[k]
             )
         )
-        if (updatedKeys.size === 0) return
+        // Notify even if no keys changed, because signals or other extensions might care about 
+        // derived changes or reference-based equality in transforms.
+        // if (updatedKeys.size === 0) return
 
         currentState = { ...currentState, ...writableNext } as StoreState<D>
 
