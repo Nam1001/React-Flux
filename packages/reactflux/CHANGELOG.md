@@ -6,18 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-## v0.4.0
+## [0.7.0] - 2026-03-14
 
-### Added
-- `withPersist` — persist store state with pluggable adapters
-- `localStorageAdapter` — web localStorage adapter
-- `sessionStorageAdapter` — web sessionStorage adapter  
-- `memoryAdapter` — in-memory adapter for SSR and testing
-- `indexedDBAdapter` — async IndexedDB adapter
-- `compose()` — compose multiple store enhancers cleanly
-- Version + migration support for schema changes
-- Configurable debounce on writes
-- SSR safe — all adapters guard against missing window/indexedDB
+### Added — `reactflux/sync`
+- `withSync` — cross-tab state synchronization using `BroadcastChannel`.
+- Automatic state rehydration across tabs on initialization.
+- Selective key synchronization via `SyncOptions`.
+- Tree-shakable subpath import: `reactflux/sync`.
+- Full integration with existing extensions (DevTools, Persist).
+- 100% test coverage for sync logic.
 
 ## [0.6.0] - 2026-03-14
 
@@ -46,13 +43,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Tree-shakable subpath import: `reactflux/signals`
 - Bundle size: < 0.6KB for signals entry point
 
-## [Unreleased]
+## [0.4.0] - 2026-03-12
 
-### Added
-- Tree-shakable architecture — core store has zero knowledge of async/computed
-- Subpath imports: `reactflux`, `reactflux/async`, `reactflux/computed`
-- Extension registry for plugins (internal)
-- `pnpm build:analyze` — generates bundle visualization (stats.html)
+### Added — `reactflux/persist`
+- `withPersist` — persist store state with pluggable adapters
+- `localStorageAdapter`, `sessionStorageAdapter`, `memoryAdapter`, `indexedDBAdapter`.
+- `compose()` — compose multiple store enhancers cleanly.
+- Version + migration support for schema changes.
+- Configurable debounce on writes.
+- SSR safe — all adapters guard against missing window/indexedDB.
+
+### Added — `reactflux/async`
+- `createAsync(fetcher, options)` — core engine for async state management.
+- Lifecycle management — automatic tracking of `idle`, `loading`, `success`, and `error` states.
+- Advanced caching — TTL (Time-To-Live) and SWR (Stale-While-Revalidate) support.
+- Optimistic updates — immediate UI feedback with automatic rollback on failure.
+- Argument-aware fetching — separate cache entries based on fetcher arguments.
 
 ### Changed — BREAKING
 - **Barrel import removed.** Use subpath imports:
@@ -62,21 +68,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Store without async extension: `fetch()` throws with message to import `reactflux/async`
 
 ### Fixed
-- Bundle sizes: core 1.4KB, async 1.1KB, computed 0.8KB (gzipped, with Terser)
-
----
-
-## [0.4.0] - 2026-03-02
-### Added — `reactflux-core`
-- `createAsync(fetcher, options)` — core engine for async state management
-- Lifecycle management — automatic tracking of `idle`, `loading`, `success`, and `error` states
-- Advanced caching — TTL (Time-To-Live) and SWR (Stale-While-Revalidate) support
-- Optimistic updates — immediate UI feedback with automatic rollback on failure
-- Argument-aware fetching — separate cache entries based on fetcher arguments
-- Week 5 performance benchmarks — engine overhead, cache hits, and optimistic transitions
-
-### Fixed — `reactflux-core`
-- ESLint: Replaced `@ts-ignore` with `@ts-expect-error` and added required descriptions in benchmarks
+- Bundle sizes: core 1.4KB, async 1.1KB, computed 0.8KB (gzipped, with Terser).
+- ESLint: Replaced `@ts-ignore` with `@ts-expect-error` across benchmarks.
 
 ---
 
@@ -133,4 +126,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - `getState()` and `setState()` — plain object and updater function forms
 - Added types: `StoreDefinition`, `Listener`, `Unsubscribe`, `Store`
 - Full test coverage for core store (100% functions, 95%+ statements)
+- Week 3 performance benchmarks and limits verification
+ (100% functions, 95%+ statements)
 - Week 3 performance benchmarks and limits verification

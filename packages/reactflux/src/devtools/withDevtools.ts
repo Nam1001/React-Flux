@@ -82,19 +82,17 @@ registerExtension({
         const devStore = store as unknown as StoreWithDevtools<object>;
         devStore.__devtools = internals;
 
-        // Wrap setState — internals is guaranteed to exist at this point
-        const originalSetState = store.setState.bind(store);
-        store.setState = (updater: unknown) => {
-            originalSetState(updater as Partial<StoreState<object>>);
+        // Use subscribe instead of wrapping setState to capture history.
+        // This is more robust against extension ordering issues.
+        store.subscribe(() => {
             if (!internals._isInternalUpdate) {
                 const actionName = internals._lastActionName ?? 'setState';
                 internals.buffer = push(internals.buffer, store.getState(), actionName);
                 internals._lastActionName = null; // Reset after capture
             }
-        };
+        });
 
         // Bridge actions to capture names. 
-        // Must happen AFTER wrapping setState so _lastActionName is set when push runs.
         const rawActions = store.actions as Record<string, (...args: unknown[]) => unknown>;
         Object.keys(rawActions).forEach((key) => {
             const original = rawActions[key];
@@ -165,7 +163,7 @@ registerExtension({
                 internals._isInternalUpdate = false;
             },
             get history() {
-                return [...internals.buffer.entries.map((e: { state: object }) => e.state)];
+                return [...internals.buffer.entries];
             },
             get snapshots() {
                 return listSnapshots(internals.snapshots);

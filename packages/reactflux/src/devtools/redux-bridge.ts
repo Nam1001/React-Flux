@@ -1,8 +1,9 @@
 import { Store } from '../types';
+import { RingBuffer } from './history';
 
 /** @internal */
 export interface DevtoolsInternals<S> {
-    buffer: { capacity: number; cursor: number; entries: S[] };
+    buffer: RingBuffer<S>;
     initialState: S;
     snapshots: Map<string, { state: S; timestamp: number }>;
     _lastActionName: string | null;

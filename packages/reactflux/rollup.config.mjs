@@ -16,6 +16,7 @@ export default {
         'adapters/indexedDB': 'src/persist/adapters/indexedDB.ts',
         signals: 'src/signals/index.ts',
         devtools: 'src/devtools/index.ts',
+        sync: 'src/sync/index.ts',
     },
     output: [
         {
