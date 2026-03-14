@@ -82,14 +82,36 @@ registerExtension({
         const devStore = store as unknown as StoreWithDevtools<object>;
         devStore.__devtools = internals;
 
+        // One-shot flag: the very first subscribe callback after withSync broadcasts
+        // REQUEST_STATE may fire setState back to initialState. We skip that single echo
+        // so it doesn't appear as a spurious history entry.
+        let _initEchoPending = true;
+
         // Use subscribe instead of wrapping setState to capture history.
         // This is more robust against extension ordering issues.
         store.subscribe(() => {
-            if (!internals._isInternalUpdate) {
-                const actionName = internals._lastActionName ?? 'setState';
-                internals.buffer = push(internals.buffer, store.getState(), actionName);
-                internals._lastActionName = null; // Reset after capture
+            if (internals._isInternalUpdate) return;
+
+            const currentState = store.getState();
+
+            // On first callback: if there's no explicit action name and state matches
+            // initialState, this is likely a withSync echo — skip once and clear flag.
+            if (_initEchoPending && internals._lastActionName === null) {
+                const init = internals.initialState as Record<string, unknown>;
+                const curr = currentState as Record<string, unknown>;
+                const keys = Object.keys(init);
+                const matchesInit = keys.length === Object.keys(curr).length
+                    && keys.every((k) => curr[k] === init[k]);
+                if (matchesInit) {
+                    _initEchoPending = false;
+                    return;
+                }
             }
+            _initEchoPending = false;
+
+            const actionName = internals._lastActionName ?? 'setState';
+            internals.buffer = push(internals.buffer, currentState, actionName);
+            internals._lastActionName = null; // Reset after capture
         });
 
         // Bridge actions to capture names. 

@@ -52,7 +52,7 @@ describe('useDevtools hook', () => {
         });
 
         render(<TestComponent store={store} />);
-        expect(screen.getByTestId('history-count').textContent).toBe('2'); // @@INIT and setState
+        expect(screen.getByTestId('history-count').textContent).toBe('1');
 
         act(() => {
             store.undo();

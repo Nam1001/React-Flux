@@ -1,19 +1,37 @@
 import { useSyncExternalStore, useCallback } from 'react';
 import type { Store } from 'reactflux';
-import type { HistoryEntry } from '../../reactflux/src/devtools/history';
-import type { DevtoolsInternals } from '../../reactflux/src/devtools/redux-bridge';
+
+/**
+ * A single entry in the devtools history buffer.
+ * Mirrors the HistoryEntry type from reactflux/devtools without requiring a subpath import.
+ */
+export interface HistoryEntry<S> {
+    state: S;
+    timestamp: number;
+    actionName: string;
+}
+
+/**
+ * Internal shape of the __devtools property attached by withDevtools.
+ * Defined locally to avoid importing internal reactflux implementation details.
+ * @internal
+ */
+interface DevtoolsShape<S> {
+    buffer: { entries: HistoryEntry<S>[]; cursor: number; capacity: number };
+    snapshots: Map<string, unknown>;
+}
 
 /**
  * Augmented store type with devtools properties.
  * @internal
  */
-interface StoreWithDevtools<S extends object> extends Store<S> {
-    __devtools?: DevtoolsInternals<S>;
+type StoreWithDevtools<S extends object> = Store<S> & {
+    __devtools?: DevtoolsShape<S>;
     canUndo?: boolean;
     canRedo?: boolean;
     history?: readonly HistoryEntry<S>[];
     snapshots?: readonly string[];
-}
+};
 
 
 /**
