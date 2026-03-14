@@ -27,6 +27,7 @@ export function createStore<D extends object>(
         changedKeys: Set<string>;
         getState: () => Record<string, unknown>;
         setComputed: (key: string, value: unknown) => void;
+        store: Store<D>;
     }) => void> = []
 
     // Run extension pipeline
@@ -79,6 +80,7 @@ export function createStore<D extends object>(
                 changedKeys,
                 getState: () => currentState as Record<string, unknown>,
                 setComputed,
+                store,
             })
         }
     }
@@ -227,10 +229,13 @@ export function createStore<D extends object>(
     // Add methods from extensions (async overwrites stubs when engines exist)
     for (const ext of getExtensions()) {
         if (ext.extendStore) {
-            const methods = ext.extendStore({ engines })
-            Object.assign(store, methods)
+            const methods = ext.extendStore({ engines, store: store as unknown as Store<object>, definition: definition as object })
+            Object.defineProperties(store, Object.getOwnPropertyDescriptors(methods))
         }
     }
+
+    // Trigger initial onStateChanged for extensions (e.g. devtools init)
+    runOnStateChanged(new Set(Object.keys(currentState)))
 
     type RawActionsType = Record<string, (...args: unknown[]) => unknown>
     const boundActions = {} as StoreActions<D>
