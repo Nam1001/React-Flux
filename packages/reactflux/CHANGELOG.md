@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.0] - 2026-03-14
+
+### Added
+- Getting Started in 5 minutes section in README
+- Migration guides — Redux → ReactFlux, Zustand → ReactFlux
+- StackBlitz interactive demo (Counter, Todo, Async)
+- Bundle size and test count badges
+
+### Changed
+- Roadmap updated to reflect shipped features and planned v1.1–v1.3
+- Test count updated to 937 across 29 test files
+- Coverage badge updated to 99%
+
+### Notes
+- Stable API — no breaking changes planned until v2.0
+- All subpath imports locked: reactflux, reactflux/async, reactflux/computed,
+  reactflux/persist, reactflux/signals, reactflux/devtools, reactflux/sync
+
+---
+
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---

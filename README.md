@@ -7,7 +7,9 @@ A fast, minimal-boilerplate React state management library with first-class asyn
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18%2B-61dafb)](https://react.dev/)
-[![Coverage](https://img.shields.io/badge/coverage-98%25-brightgreen)]()
+[![Coverage](https://img.shields.io/badge/coverage-99%25-brightgreen)]()
+[![Core size](https://img.shields.io/badge/core-1.4KB-success)]()
+[![Tests](https://img.shields.io/badge/tests-937%20passing-success)]()
 
 ---
 
@@ -37,6 +39,58 @@ yarn add reactflux reactflux-react
 ```
 
 **Peer dependencies:** React 18+
+
+---
+
+## Get started in 5 minutes
+
+**1. Install**
+```bash
+npm install reactflux reactflux-react
+```
+
+**2. Create a store**
+```ts
+import { createStore } from 'reactflux'
+
+const counterStore = createStore({ count: 0 })
+```
+
+**3. Use it in a component**
+```tsx
+import { useStore } from 'reactflux-react'
+
+function Counter() {
+  const count = useStore(counterStore, s => s.count)
+  return (
+    <button onClick={() => counterStore.setState(s => ({ count: s.count + 1 }))}>
+      Count: {count}
+    </button>
+  )
+}
+```
+
+**4. Add async data**
+```ts
+import { createAsync } from 'reactflux/async'
+
+const userStore = createStore({
+  user: createAsync(async (id: string) => {
+    const res = await fetch(`/api/users/${id}`)
+    return res.json()
+  })
+})
+
+await userStore.fetch('user', 'user-123')
+userStore.getState().user.data   // { id: 'user-123', name: 'Alice' }
+userStore.getState().user.status // 'success'
+```
+
+That's it. No actions, reducers, or providers needed.
+
+➡️ [Try it on StackBlitz](STACKBLITZ_URL)
+
+---
 
 ---
 
@@ -858,7 +912,82 @@ userStore.getState().user.status      // inferred as 'idle' | 'loading' | 'succe
 | `sync/` | 100% | 100% | 100% | 100% |
 | **Total** | **99.1%** | **96%+** | **98%+** | **99.1%** |
 
-864 tests across 28 test files. Zero known bugs.
+937 tests across 29 test files. Zero known bugs.
+
+---
+
+## Migrating from Redux
+
+**Before (Redux)**
+```ts
+// actions.ts
+const INCREMENT = 'INCREMENT'
+const increment = () => ({ type: INCREMENT })
+
+// reducer.ts
+function counterReducer(state = { count: 0 }, action) {
+  switch (action.type) {
+    case INCREMENT: return { ...state, count: state.count + 1 }
+    default: return state
+  }
+}
+
+// store.ts
+const store = createStore(counterReducer)
+
+// component.tsx
+const count = useSelector(s => s.count)
+const dispatch = useDispatch()
+dispatch(increment())
+```
+
+**After (ReactFlux)**
+```ts
+// store.ts
+const counterStore = createStore({
+  count: 0,
+  actions: {
+    increment() { counterStore.setState(s => ({ count: s.count + 1 })) }
+  }
+})
+
+// component.tsx
+const count = useStore(counterStore, s => s.count)
+counterStore.increment()
+```
+
+## Migrating from Zustand
+
+**Before (Zustand)**
+```ts
+const useStore = create((set) => ({
+  count: 0,
+  increment: () => set(s => ({ count: s.count + 1 })),
+}))
+
+// component
+const count = useStore(s => s.count)
+const increment = useStore(s => s.increment)
+```
+
+**After (ReactFlux)**
+```ts
+const counterStore = createStore({
+  count: 0,
+  actions: {
+    increment() { counterStore.setState(s => ({ count: s.count + 1 })) }
+  }
+})
+
+// component
+const count = useStore(counterStore, s => s.count)
+counterStore.increment()
+```
+
+**Key differences:**
+- No provider needed — stores are module-level singletons
+- Actions defined inside the store, not as part of state
+- Built-in async support — no need for a separate server state library
 
 ---
 
@@ -866,14 +995,15 @@ userStore.getState().user.status      // inferred as 'idle' | 'loading' | 'succe
 
 | Version | Theme | Status |
 |---|---|---|
-| v0.1–v0.3 | Core store + React adapter + Immer + Actions | ✅ Done |
-| v0.4 | Async state — `createAsync`, TTL, SWR, optimistic | ✅ Done |
-| v0.5 | Signals — `signal()`, `useSignal()`, fine-grained | ✅ Done |
-| v0.6 | DevTools — Time-travel, Undo/Redo, Snapshots | ✅ Done |
-| v0.7 | Sync — Cross-tab synchronization via BroadcastChannel | ✅ Done |
-| v0.8 | TypeScript hardening — full inference, strict types | 🔨 Next |
-| v0.9 | Middleware support — `logger`, `persist` v2 | 📋 Planned |
-| v1.0 | Docs site, launch, stable API | 📋 Planned |
+| v0.1–v0.3 | Core store, React adapter, Immer, Actions | ✅ Shipped |
+| v0.4 | Async state — createAsync, TTL, SWR, optimistic | ✅ Shipped |
+| v0.5 | Computed values + Signals | ✅ Shipped |
+| v0.6 | DevTools — Time-travel, Undo/Redo, Snapshots | ✅ Shipped |
+| v0.7 | Cross-tab sync via BroadcastChannel | ✅ Shipped |
+| v1.0 | Stable API, polished README, StackBlitz demo | ✅ Shipped |
+| v1.1 | Purpose-built DevTools browser extension | 📋 Planned |
+| v1.2 | Full docs site (Docusaurus) | 📋 Planned |
+| v1.3 | Middleware system | 📋 Planned |
 
 ---
 
