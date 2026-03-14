@@ -72,6 +72,7 @@ ReactFlux uses subpath imports so you only bundle what you use:
 | `import { createAsync } from 'reactflux/async'` | +1.1 KB | Async state, fetching, caching |
 | `import { computed } from 'reactflux/computed'` | +0.8 KB | Derived state |
 | `import { withPersist } from 'reactflux/persist'` | +1.2 KB | Persistence, adapters |
+| `import { signal } from 'reactflux/signals'` | +0.4 KB | Fine-grained reactivity |
 
 ```ts
 // Core only
@@ -571,6 +572,55 @@ const store = withPersist({
 
 ---
 
+## Signals (v0.9)
+
+Signals provide fine-grained reactivity by allowing you to subscribe to a single key in the store. Unlike `useStore` which re-renders if a selector result changes, Signals are lower-level objects that can be passed around and subscribed to directly.
+
+### `signal(store, key, transform?)`
+
+Creates a Signal for a specific store key. Optionally transforms the value.
+
+```ts
+import { createStore } from 'reactflux'
+import { signal } from 'reactflux/signals'
+
+const store = createStore({ count: 0, user: { name: 'Alice' } })
+
+// 1. Standard Signal
+const countSignal = signal(store, 'count')
+
+// 2. Derived Signal (Read-only)
+const doubleSignal = signal(store, 'count', v => v * 2)
+```
+
+### Signal API
+
+- `signal.get()`: Returns current value.
+- `signal.set(value | fn)`: Updates the store (throws if derived).
+- `signal.subscribe(listener)`: Notifies when *this* signal's value changes. Returns unsubscribe.
+- `signal._derived`: Boolean flag.
+
+### React Integration: `useSignal(signal)`
+
+The `useSignal` hook (from `reactflux-react`) subscribes to a signal and returns its value. The component re-renders **ONLY** when that specific signal changes.
+
+```tsx
+import { signal } from 'reactflux/signals'
+import { useSignal } from 'reactflux-react'
+
+const countSignal = signal(counterStore, 'count')
+
+function CounterDisplay() {
+  const count = useSignal(countSignal)
+  return <div>Count: {count}</div>
+}
+```
+
+Signals are perfect for high-frequency updates or deep component trees where you want to avoid overhead from larger selectors.
+
+
+---
+
 ## Cross-Store Communication
 
 Stores are plain JavaScript objects. Import and use them freely across stores.
@@ -709,10 +759,11 @@ userStore.getState().user.status      // inferred as 'idle' | 'loading' | 'succe
 | `async.ts` | 98.44% | 95.83% | 100% | 98.44% |
 | `proxy.ts` | 100% | 100% | 100% | 100% |
 | `store.ts` | 98.3% | 95%+ | 100% | 98.3% |
+| `signals/` | 100% | 100% | 100% | 100% |
 | `persist/` | 99.6% | 92%+ | 100% | 99.6% |
 | **Total** | **98.3%** | **95%+** | **95%+** | **98.3%** |
 
-665 tests across 21 test files. Zero known bugs.
+779 tests across 26 test files. Zero known bugs.
 
 ---
 
@@ -726,7 +777,7 @@ userStore.getState().user.status      // inferred as 'idle' | 'loading' | 'succe
 | v0.6 | Persistence — localStorage, sessionStorage, IndexedDB | ✅ Done |
 | v0.7 | TypeScript hardening — full inference, strict types | 🔨 Next |
 | v0.8 | Time-travel — `undo()`, `redo()`, named snapshots | 📋 Planned |
-| v0.9 | DevTools + Signals | 📋 Planned |
+| v0.9 | Signals — `signal()`, `useSignal()`, fine-grained | ✅ Done |
 | v1.0 | Docs site, launch, stable API | 📋 Planned |
 
 ---
