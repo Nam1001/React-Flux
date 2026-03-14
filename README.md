@@ -1,4 +1,4 @@
-# ⚡ ReactFlux
+# ⚡ Storve
 
 > **State that thinks for itself.**
 
@@ -13,9 +13,9 @@ A fast, minimal-boilerplate React state management library with first-class asyn
 
 ---
 
-## Why ReactFlux?
+## Why Storve?
 
-| Problem with existing tools | How ReactFlux solves it |
+| Problem with existing tools | How Storve solves it |
 |---|---|
 | Redux requires actions, reducers, selectors in separate files | One `createStore` call, zero boilerplate |
 | Zustand has no built-in async — you need TanStack Query too | `createAsync` is first-class — loading, error, caching built in |
@@ -29,13 +29,13 @@ A fast, minimal-boilerplate React state management library with first-class asyn
 
 ```bash
 # npm
-npm install reactflux reactflux-react
+npm install storve storve-react
 
 # pnpm
-pnpm add reactflux reactflux-react
+pnpm add storve storve-react
 
 # yarn
-yarn add reactflux reactflux-react
+yarn add storve storve-react
 ```
 
 **Peer dependencies:** React 18+
@@ -46,19 +46,19 @@ yarn add reactflux reactflux-react
 
 **1. Install**
 ```bash
-npm install reactflux reactflux-react
+npm install storve storve-react
 ```
 
 **2. Create a store**
 ```ts
-import { createStore } from 'reactflux'
+import { createStore } from 'storve'
 
 const counterStore = createStore({ count: 0 })
 ```
 
 **3. Use it in a component**
 ```tsx
-import { useStore } from 'reactflux-react'
+import { useStore } from 'storve-react'
 
 function Counter() {
   const count = useStore(counterStore, s => s.count)
@@ -72,7 +72,7 @@ function Counter() {
 
 **4. Add async data**
 ```ts
-import { createAsync } from 'reactflux/async'
+import { createAsync } from 'storve/async'
 
 const userStore = createStore({
   user: createAsync(async (id: string) => {
@@ -97,8 +97,8 @@ That's it. No actions, reducers, or providers needed.
 ## Quick Start
 
 ```tsx
-import { createStore } from 'reactflux'
-import { useStore } from 'reactflux-react'
+import { createStore } from 'storve'
+import { useStore } from 'storve-react'
 
 // 1. Create a store
 const counterStore = createStore({ count: 0 })
@@ -118,39 +118,39 @@ function Counter() {
 
 ## Import Patterns (Tree-Shaking)
 
-ReactFlux uses subpath imports so you only bundle what you use:
+Storve uses subpath imports so you only bundle what you use:
 
 | Import | Size (gzipped) | Use when |
 |--------|----------------|----------|
-| `import { createStore, batch } from 'reactflux'` | ~1.4 KB | Core store only |
-| `import { createAsync } from 'reactflux/async'` | +1.1 KB | Async state, fetching, caching |
-| `import { computed } from 'reactflux/computed'` | +0.8 KB | Derived state |
-| `import { withPersist } from 'reactflux/persist'` | +1.2 KB | Persistence, adapters |
-| `import { signal } from 'reactflux/signals'` | +0.4 KB | Fine-grained reactivity |
-| `import { withDevtools } from 'reactflux/devtools'` | +0.8 KB | Time-travel, Undo/Redo |
-| `import { withSync } from 'reactflux/sync'` | +0.6 KB | Cross-tab synchronization |
+| `import { createStore, batch } from 'storve'` | ~1.4 KB | Core store only |
+| `import { createAsync } from 'storve/async'` | +1.1 KB | Async state, fetching, caching |
+| `import { computed } from 'storve/computed'` | +0.8 KB | Derived state |
+| `import { withPersist } from 'storve/persist'` | +1.2 KB | Persistence, adapters |
+| `import { signal } from 'storve/signals'` | +0.4 KB | Fine-grained reactivity |
+| `import { withDevtools } from 'storve/devtools'` | +0.8 KB | Time-travel, Undo/Redo |
+| `import { withSync } from 'storve/sync'` | +0.6 KB | Cross-tab synchronization |
 
 ```ts
 // Core only
-import { createStore } from 'reactflux'
+import { createStore } from 'storve'
 
 // With async
-import { createStore } from 'reactflux'
-import { createAsync } from 'reactflux/async'
+import { createStore } from 'storve'
+import { createAsync } from 'storve/async'
 
 // With computed
-import { createStore } from 'reactflux'
-import { computed } from 'reactflux/computed'
+import { createStore } from 'storve'
+import { computed } from 'storve/computed'
 ```
 
 ---
 
 ## Core Concepts
 
-ReactFlux has two packages:
+Storve has two packages:
 
-- **`reactflux`** — the framework-agnostic core store. Works anywhere: React, Node, tests, vanilla JS.
-- **`reactflux-react`** — the React adapter. Provides `useStore` hook built on `useSyncExternalStore`.
+- **`storve`** — the framework-agnostic core store. Works anywhere: React, Node, tests, vanilla JS.
+- **`storve-react`** — the React adapter. Provides `useStore` hook built on `useSyncExternalStore`.
 
 ---
 
@@ -161,7 +161,7 @@ ReactFlux has two packages:
 Creates a reactive store. Returns a store instance.
 
 ```ts
-import { createStore } from 'reactflux'
+import { createStore } from 'storve'
 
 const store = createStore({
   count: 0,
@@ -298,12 +298,12 @@ Actions keep business logic in one place instead of scattered across components.
 
 ---
 
-### `useStore(store, selector?)` *(reactflux-react)*
+### `useStore(store, selector?)` *(storve-react)*
 
 React hook to consume a store inside a component. Built on `useSyncExternalStore` — safe in React 18 Concurrent Mode with no tearing.
 
 ```tsx
-import { useStore } from 'reactflux-react'
+import { useStore } from 'storve-react'
 
 function MyComponent() {
   // Subscribe to the entire store
@@ -328,8 +328,8 @@ function MyComponent() {
 Synchronous derived state with automatic dependency tracking. Use `computed(fn)` in your store definition; the store will run the function against the current state, track which keys were read, and recompute when those dependencies change. Supports chaining (computed can depend on other computeds). Circular dependencies are detected at store creation and throw a clear error.
 
 ```ts
-import { createStore } from 'reactflux'
-import { computed } from 'reactflux/computed'
+import { createStore } from 'storve'
+import { computed } from 'storve/computed'
 
 const store = createStore({
   a: 1,
@@ -348,15 +348,15 @@ Computed keys are read-only: you cannot set them via `setState` (TypeScript will
 
 ## Async State
 
-Async data is a first-class citizen in ReactFlux. No separate library needed.
+Async data is a first-class citizen in Storve. No separate library needed.
 
 ### `createAsync(fn, options?)`
 
 Defines an async value inside a store. Automatically manages `loading`, `error`, `data`, and `status`.
 
 ```ts
-import { createStore } from 'reactflux'
-import { createAsync } from 'reactflux/async'
+import { createStore } from 'storve'
+import { createAsync } from 'storve/async'
 
 const userStore = createStore({
   user: createAsync(async (id: string) => {
@@ -462,7 +462,7 @@ await store.fetch('user', 'user-1')   // cache hit — no network
 
 ### Stale-While-Revalidate (SWR)
 
-When the cache expires, instead of showing a loading spinner, ReactFlux immediately returns the stale data and fetches fresh data in the background.
+When the cache expires, instead of showing a loading spinner, Storve immediately returns the stale data and fetches fresh data in the background.
 
 ```ts
 const store = createStore({
@@ -539,9 +539,9 @@ if (status === 'error') {
 ### Full Async Example
 
 ```tsx
-import { createStore } from 'reactflux'
-import { createAsync } from 'reactflux/async'
-import { useStore } from 'reactflux-react'
+import { createStore } from 'storve'
+import { createAsync } from 'storve/async'
+import { useStore } from 'storve-react'
 
 const userStore = createStore({
   user: createAsync(
@@ -576,16 +576,16 @@ function UserProfile({ id }: { id: string }) {
 
 ## Persistence Layer (v0.4)
 
-ReactFlux includes a powerful, tree-shakable persistence layer that automatically syncs your store state to external storage.
+Storve includes a powerful, tree-shakable persistence layer that automatically syncs your store state to external storage.
 
 ### `withPersist(store, options)`
 
 Enhances a store with persistence capabilities. It handles hydration (loading state on startup) and automatic debounced writes on state changes.
 
 ```ts
-import { createStore } from 'reactflux'
-import { withPersist } from 'reactflux/persist'
-import { localStorageAdapter } from 'reactflux/persist/adapters/localStorage'
+import { createStore } from 'storve'
+import { withPersist } from 'storve/persist'
+import { localStorageAdapter } from 'storve/persist/adapters/localStorage'
 
 const store = withPersist(
   createStore({ count: 0 }),
@@ -604,7 +604,7 @@ await store.hydrated
 
 ### Adapters
 
-ReactFlux comes with several built-in adapters, all SSR-safe:
+Storve comes with several built-in adapters, all SSR-safe:
 
 - **`localStorageAdapter()`**: Persist to `window.localStorage`.
 - **`sessionStorageAdapter()`**: Persist to `window.sessionStorage`.
@@ -616,9 +616,9 @@ ReactFlux comes with several built-in adapters, all SSR-safe:
 Use `withPersist` as a higher-order function for clean composition:
 
 ```ts
-import { createStore } from 'reactflux'
-import { withPersist } from 'reactflux/persist'
-import { localStorageAdapter } from 'reactflux/persist/adapters/localStorage'
+import { createStore } from 'storve'
+import { withPersist } from 'storve/persist'
+import { localStorageAdapter } from 'storve/persist/adapters/localStorage'
 
 const store = withPersist({ 
   key: 'app', 
@@ -637,8 +637,8 @@ Signals provide fine-grained reactivity by allowing you to subscribe to a single
 Creates a Signal for a specific store key. Optionally transforms the value.
 
 ```ts
-import { createStore } from 'reactflux'
-import { signal } from 'reactflux/signals'
+import { createStore } from 'storve'
+import { signal } from 'storve/signals'
 
 const store = createStore({ count: 0, user: { name: 'Alice' } })
 
@@ -658,11 +658,11 @@ const doubleSignal = signal(store, 'count', v => v * 2)
 
 ### React Integration: `useSignal(signal)`
 
-The `useSignal` hook (from `reactflux-react`) subscribes to a signal and returns its value. The component re-renders **ONLY** when that specific signal changes.
+The `useSignal` hook (from `storve-react`) subscribes to a signal and returns its value. The component re-renders **ONLY** when that specific signal changes.
 
 ```tsx
-import { signal } from 'reactflux/signals'
-import { useSignal } from 'reactflux-react'
+import { signal } from 'storve/signals'
+import { useSignal } from 'storve-react'
 
 const countSignal = signal(counterStore, 'count')
 
@@ -679,15 +679,15 @@ Signals are perfect for high-frequency updates or deep component trees where you
 
 ## DevTools & Time Travel (v0.6)
 
-ReactFlux features a built-in time-travel engine that integrates seamlessly with the Redux DevTools extension. It uses a ring-buffer history to keep memory usage constant while providing powerful undo/redo and snapshot capabilities.
+Storve features a built-in time-travel engine that integrates seamlessly with the Redux DevTools extension. It uses a ring-buffer history to keep memory usage constant while providing powerful undo/redo and snapshot capabilities.
 
 ### `withDevtools(store, options)`
 
 Enhances a store with history tracking and Redux DevTools integration.
 
 ```ts
-import { createStore } from 'reactflux'
-import { withDevtools } from 'reactflux/devtools'
+import { createStore } from 'storve'
+import { withDevtools } from 'storve/devtools'
 
 const store = withDevtools(
   createStore({ count: 0 }),
@@ -720,10 +720,10 @@ store.restore('before-expensive-op') // Jumps back instantly
 
 ### React Integration: `useDevtools(store)`
 
-The `useDevtools` hook (from `reactflux-react`) provides a reactive way to access history state, useful for building your own Undo/Redo UI.
+The `useDevtools` hook (from `storve-react`) provides a reactive way to access history state, useful for building your own Undo/Redo UI.
 
 ```tsx
-import { useDevtools } from 'reactflux-react'
+import { useDevtools } from 'storve-react'
 
 function Controls() {
   const { canUndo, canRedo, undo, redo } = useDevtools(counterStore)
@@ -741,15 +741,15 @@ function Controls() {
 
 ## Cross-Tab Synchronization (v0.7)
 
-ReactFlux provides an easy way to synchronize state across multiple browser tabs using the `BroadcastChannel` API. This is useful for keeping user preferences, authentication state, or shared data consistent without manual event handling.
+Storve provides an easy way to synchronize state across multiple browser tabs using the `BroadcastChannel` API. This is useful for keeping user preferences, authentication state, or shared data consistent without manual event handling.
 
 ### `withSync(store, options)`
 
 Enhances a store with cross-tab synchronization.
 
 ```ts
-import { createStore } from 'reactflux'
-import { withSync } from 'reactflux/sync'
+import { createStore } from 'storve'
+import { withSync } from 'storve/sync'
 
 const store = withSync(
   createStore({ theme: 'light', user: { name: 'Alice' } }),
@@ -871,7 +871,7 @@ All benchmarks run on Apple MacBook Air, 100,000 iterations with 1,000 warmup it
 
 ## TypeScript
 
-ReactFlux is written in TypeScript with full inference. No type casting required.
+Storve is written in TypeScript with full inference. No type casting required.
 
 ```ts
 // State type is fully inferred
@@ -941,7 +941,7 @@ const dispatch = useDispatch()
 dispatch(increment())
 ```
 
-**After (ReactFlux)**
+**After (Storve)**
 ```ts
 // store.ts
 const counterStore = createStore({
@@ -970,7 +970,7 @@ const count = useStore(s => s.count)
 const increment = useStore(s => s.increment)
 ```
 
-**After (ReactFlux)**
+**After (Storve)**
 ```ts
 const counterStore = createStore({
   count: 0,
@@ -1009,4 +1009,4 @@ counterStore.increment()
 
 ## License
 
-MIT © 2026 ReactFlux
+MIT © 2026 Storve

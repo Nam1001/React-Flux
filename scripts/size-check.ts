@@ -4,24 +4,24 @@ import { join } from 'path';
 
 const ROOT = process.cwd();
 const limits: Record<string, number> = {
-  'reactflux/index': 10 * 1024,
-  'reactflux/async': 5 * 1024,
-  'reactflux/computed': 3 * 1024,
-  'reactflux-react': 3 * 1024,
+  'storve/index': 10 * 1024,
+  'storve/async': 5 * 1024,
+  'storve/computed': 3 * 1024,
+  'storve-react': 3 * 1024,
 };
 
 let allPassed = true;
 
-const reactfluxChunks = [
-  ['reactflux', 'index.mjs'],
-  ['reactflux', 'async.mjs'],
-  ['reactflux', 'computed.mjs'],
+const storveChunks = [
+  ['storve', 'index.mjs'],
+  ['storve', 'async.mjs'],
+  ['storve', 'computed.mjs'],
 ];
 // Async chunk must contain these store APIs (sanity check for tree-shaking)
 const ASYNC_CHUNK_REQUIRED = ['fetch', 'refetch', 'invalidate', 'invalidateAll', 'getAsyncState'];
 
-for (const [pkg, file] of reactfluxChunks) {
-  const key = pkg === 'reactflux' ? `reactflux/${file.replace('.mjs', '')}` : pkg;
+for (const [pkg, file] of storveChunks) {
+  const key = pkg === 'storve' ? `storve/${file.replace('.mjs', '')}` : pkg;
   const path = join(ROOT, 'packages', pkg, 'dist', file);
   try {
     const raw = readFileSync(path);
@@ -29,7 +29,7 @@ for (const [pkg, file] of reactfluxChunks) {
     if (file === 'async.mjs') {
       const missing = ASYNC_CHUNK_REQUIRED.filter((name) => !rawStr.includes(name));
       if (missing.length > 0) {
-        console.error(`reactflux/async: FAIL - chunk missing APIs: ${missing.join(', ')}`);
+        console.error(`storve/async: FAIL - chunk missing APIs: ${missing.join(', ')}`);
         allPassed = false;
       }
     }
@@ -45,16 +45,16 @@ for (const [pkg, file] of reactfluxChunks) {
   }
 }
 
-const reactfluxReactPath = join(ROOT, 'packages', 'reactflux-react', 'dist', 'index.mjs');
+const storveReactPath = join(ROOT, 'packages', 'storve-react', 'dist', 'index.mjs');
 try {
-  const raw = readFileSync(reactfluxReactPath);
+  const raw = readFileSync(storveReactPath);
   const gzipped = gzipSync(raw);
   const sizeKB = (gzipped.length / 1024).toFixed(2);
-  const ok = gzipped.length < limits['reactflux-react'];
+  const ok = gzipped.length < limits['storve-react'];
   if (!ok) allPassed = false;
-  console.log(`reactflux-react: ${sizeKB} KB gzipped ${ok ? 'PASS' : 'FAIL'}`);
+  console.log(`storve-react: ${sizeKB} KB gzipped ${ok ? 'PASS' : 'FAIL'}`);
 } catch (err) {
-  console.error(`reactflux-react: FAIL - ${reactfluxReactPath} not found. Run \`pnpm build\` first.`);
+  console.error(`storve-react: FAIL - ${storveReactPath} not found. Run \`pnpm build\` first.`);
   allPassed = false;
 }
 

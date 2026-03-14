@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Create a report to help us improve ReactFlux
+about: Create a report to help us improve Storve
 title: ''
 labels: bug
 assignees: ''
