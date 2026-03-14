@@ -1,6 +1,6 @@
-# Contributing to ReactFlux
+# Contributing to Storve
 
-First off, thank you for considering contributing to ReactFlux!
+First off, thank you for considering contributing to Storve!
 
 ## Workflow
 

@@ -24,6 +24,4 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - name: Test + Coverage + Benchmarks
-        run: pnpm --filter reactflux test
-      - name: Build demo app
-        run: pnpm --filter reactflux-todo-demo build
+        run: pnpm --filter storve test

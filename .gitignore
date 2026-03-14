@@ -5,3 +5,6 @@ coverage
 
 # Demo app
 apps/todo/dist
+
+# Claude/Cursor worktrees
+.claude
