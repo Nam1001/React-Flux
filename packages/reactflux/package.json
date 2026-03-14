@@ -1,6 +1,6 @@
 {
     "name": "reactflux",
-    "version": "0.6.0",
+    "version": "0.7.0",
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
     "types": "dist/index.d.ts",
@@ -54,6 +54,11 @@
             "types": "./dist/devtools.d.ts",
             "import": "./dist/devtools.mjs",
             "require": "./dist/devtools.cjs"
+        },
+        "./sync": {
+            "types": "./dist/sync/index.d.ts",
+            "import": "./dist/sync.mjs",
+            "require": "./dist/sync.cjs"
         }
     },
     "scripts": {
