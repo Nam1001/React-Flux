@@ -73,6 +73,7 @@ ReactFlux uses subpath imports so you only bundle what you use:
 | `import { computed } from 'reactflux/computed'` | +0.8 KB | Derived state |
 | `import { withPersist } from 'reactflux/persist'` | +1.2 KB | Persistence, adapters |
 | `import { signal } from 'reactflux/signals'` | +0.4 KB | Fine-grained reactivity |
+| `import { withDevtools } from 'reactflux/devtools'` | +0.8 KB | Time-travel, Undo/Redo |
 
 ```ts
 // Core only
@@ -518,7 +519,7 @@ function UserProfile({ id }: { id: string }) {
 ```
 ---
 
-## Persistence Layer
+## Persistence Layer (v0.4)
 
 ReactFlux includes a powerful, tree-shakable persistence layer that automatically syncs your store state to external storage.
 
@@ -572,7 +573,7 @@ const store = withPersist({
 
 ---
 
-## Signals (v0.9)
+## Signals (v0.5)
 
 Signals provide fine-grained reactivity by allowing you to subscribe to a single key in the store. Unlike `useStore` which re-renders if a selector result changes, Signals are lower-level objects that can be passed around and subscribed to directly.
 
@@ -621,7 +622,67 @@ Signals are perfect for high-frequency updates or deep component trees where you
 
 ---
 
-## Cross-Store Communication
+## DevTools & Time Travel (v0.6)
+
+ReactFlux features a built-in time-travel engine that integrates seamlessly with the Redux DevTools extension. It uses a ring-buffer history to keep memory usage constant while providing powerful undo/redo and snapshot capabilities.
+
+### `withDevtools(store, options)`
+
+Enhances a store with history tracking and Redux DevTools integration.
+
+```ts
+import { createStore } from 'reactflux'
+import { withDevtools } from 'reactflux/devtools'
+
+const store = withDevtools(
+  createStore({ count: 0 }),
+  { 
+    name: 'My Store',   // Label in DevTools panel
+    maxHistory: 50      // Max entries in ring buffer (default: 50)
+  }
+)
+```
+
+### History API
+
+Once enhanced, the store instance provides methods to navigate history:
+
+- `store.undo()`: Move back one step in history.
+- `store.redo()`: Move forward one step in history.
+- `store.canUndo`: Boolean flag indicating if undo is possible.
+- `store.canRedo`: Boolean flag indicating if redo is possible.
+- `store.clearHistory()`: Wipes the history buffer.
+
+### Named Snapshots
+
+Save and restore specific state checkpoints by name.
+
+```ts
+store.snapshot('before-expensive-op')
+// ... make changes ...
+store.restore('before-expensive-op') // Jumps back instantly
+```
+
+### React Integration: `useDevtools(store)`
+
+The `useDevtools` hook (from `reactflux-react`) provides a reactive way to access history state, useful for building your own Undo/Redo UI.
+
+```tsx
+import { useDevtools } from 'reactflux-react'
+
+function Controls() {
+  const { canUndo, canRedo, undo, redo } = useDevtools(counterStore)
+  
+  return (
+    <div>
+      <button onClick={undo} disabled={!canUndo}>Undo</button>
+      <button onClick={redo} disabled={!canRedo}>Redo</button>
+    </div>
+  )
+}
+```
+
+---
 
 Stores are plain JavaScript objects. Import and use them freely across stores.
 
@@ -773,11 +834,11 @@ userStore.getState().user.status      // inferred as 'idle' | 'loading' | 'succe
 |---|---|---|
 | v0.1–v0.3 | Core store + React adapter + Immer + Actions | ✅ Done |
 | v0.4 | Async state — `createAsync`, TTL, SWR, optimistic | ✅ Done |
-| v0.5 | Computed values — `computed()`, auto-memoization | ✅ Done |
-| v0.6 | Persistence — localStorage, sessionStorage, IndexedDB | ✅ Done |
+| v0.5 | Signals — `signal()`, `useSignal()`, fine-grained | ✅ Done |
+| v0.6 | DevTools — Time-travel, Undo/Redo, Snapshots | ✅ Done |
 | v0.7 | TypeScript hardening — full inference, strict types | 🔨 Next |
-| v0.8 | Time-travel — `undo()`, `redo()`, named snapshots | 📋 Planned |
-| v0.9 | Signals — `signal()`, `useSignal()`, fine-grained | ✅ Done |
+| v0.8 | Middleware support — `logger`, `persist` v2 | 📋 Planned |
+| v0.9 | Performance — WASM-backed state diffing | 📋 Planned |
 | v1.0 | Docs site, launch, stable API | 📋 Planned |
 
 ---
