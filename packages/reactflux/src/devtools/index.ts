@@ -1,3 +1,4 @@
+/* v8 ignore next 10 */
 export { withDevtools } from './withDevtools';
 export type { DevtoolsOptions } from './withDevtools';
 export type { HistoryEntry } from './history';

@@ -33,9 +33,11 @@ describe('useDevtools hook', () => {
         
         render(<TestComponent store={store} />);
         expect(screen.getByTestId('can-redo').textContent).toBe('false');
+        expect(screen.getByTestId('history-count').textContent).toBe('1'); // initialState
 
         act(() => {
             store.setState({ count: 1 });
+            store.setState({ count: 2 });
         });
         
         act(() => {
@@ -49,10 +51,11 @@ describe('useDevtools hook', () => {
         const store = createStore(withDevtools({ count: 0 }, { name: 'test' }));
         act(() => {
             store.setState({ count: 1 });
+            store.setState({ count: 2 });
         });
 
         render(<TestComponent store={store} />);
-        expect(screen.getByTestId('history-count').textContent).toBe('1');
+        expect(screen.getByTestId('history-count').textContent).toBe('2');
 
         act(() => {
             store.undo();
