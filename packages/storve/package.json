@@ -1,5 +1,9 @@
 {
     "name": "@storve/core",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Nam1001/React-Flux.git"
+    },
     "version": "1.0.0",
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
