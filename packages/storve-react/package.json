@@ -4,7 +4,7 @@
         "type": "git",
         "url": "https://github.com/Nam1001/React-Flux.git"
     },
-    "version": "1.0.0",
+    "version": "1.0.1",
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
     "types": "dist/index.d.ts",
@@ -24,7 +24,7 @@
         "lint": "eslint src --ext .ts,.tsx"
     },
     "dependencies": {
-        "@storve/core": "1.0.0"
+        "@storve/core": "1.0.1"
     },
     "peerDependencies": {
         "react": ">=18.0.0"
