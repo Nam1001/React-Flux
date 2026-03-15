@@ -1017,22 +1017,6 @@ counterStore.increment()
 
 ---
 
-## Roadmap
-
-| Version | Theme | Status |
-|---|---|---|
-| v0.1–v0.3 | Core store, React adapter, Immer, Actions | ✅ Shipped |
-| v0.4 | Async state — createAsync, TTL, SWR, optimistic | ✅ Shipped |
-| v0.5 | Computed values + Signals | ✅ Shipped |
-| v0.6 | DevTools — Time-travel, Undo/Redo, Snapshots | ✅ Shipped |
-| v0.7 | Cross-tab sync via BroadcastChannel | ✅ Shipped |
-| v1.0 | Stable API, polished README, StackBlitz demo | ✅ Shipped |
-| v1.1 | Purpose-built DevTools browser extension | 📋 Planned |
-| v1.2 | Full docs site (Docusaurus) | 📋 Planned |
-| v1.3 | Middleware system | 📋 Planned |
-
----
-
 ## License
 
 MIT © 2026 Storve
