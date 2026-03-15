@@ -6,15 +6,29 @@
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)](https://www.typescriptlang.org/)
 
+## Two packages
+
+Storve is split into two packages. **Install both** for React apps:
+
+| Package | Purpose |
+|---------|---------|
+| **`@storve/core`** | Core store — `createStore`, async, computed, persist, signals, devtools, sync |
+| **`@storve/react`** | React bindings — `useStore`, `useDevtools` hooks |
+
 ## Installation
 
 ```bash
-npm install @storve/core
+# For React apps — install both packages
+npm install @storve/core @storve/react
+
 # or
-pnpm add @storve/core
+pnpm add @storve/core @storve/react
+
 # or
-yarn add @storve/core
+yarn add @storve/core @storve/react
 ```
+
+**Peer dependencies:** `immer` (>=10.0.0), `react` (>=18.0.0) for full features
 
 ## Quick Start
 
@@ -24,6 +38,24 @@ import { createStore } from '@storve/core'
 const store = createStore({ count: 0 })
 store.getState().count  // 0
 store.setState(s => ({ count: s.count + 1 }))
+```
+
+In React, use `@storve/react` for the `useStore` hook:
+
+```tsx
+import { createStore } from '@storve/core'
+import { useStore } from '@storve/react'
+
+const counterStore = createStore({ count: 0 })
+
+function Counter() {
+  const count = useStore(counterStore, s => s.count)
+  return (
+    <button onClick={() => counterStore.setState(s => ({ count: s.count + 1 }))}>
+      Count: {count}
+    </button>
+  )
+}
 ```
 
 ## Subpath Exports
@@ -42,9 +74,9 @@ store.setState(s => ({ count: s.count + 1 }))
 | `@storve/core/devtools` | Time-travel, Undo/Redo with `withDevtools` |
 | `@storve/core/sync` | Cross-tab sync with `withSync` |
 
-## Documentation
+## GitHub
 
-Full docs, API reference, and examples: [GitHub - Nam1001/React-Flux](https://github.com/Nam1001/React-Flux)
+[https://github.com/Nam1001/React-Flux](https://github.com/Nam1001/React-Flux)
 
 ## License
 

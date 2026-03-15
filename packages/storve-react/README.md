@@ -6,12 +6,24 @@
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![React](https://img.shields.io/badge/React-18%2B-61dafb)](https://react.dev/)
 
+## Two packages
+
+Storve is split into two packages. **Install both** — `@storve/react` depends on `@storve/core`:
+
+| Package | Purpose |
+|---------|---------|
+| **`@storve/core`** | Core store — `createStore`, async, computed, persist, signals, devtools, sync |
+| **`@storve/react`** | React bindings — `useStore`, `useDevtools` hooks |
+
 ## Installation
 
 ```bash
+# Install both packages (required)
 npm install @storve/core @storve/react
+
 # or
 pnpm add @storve/core @storve/react
+
 # or
 yarn add @storve/core @storve/react
 ```
@@ -41,9 +53,9 @@ function Counter() {
 - **`useStore(store, selector?)`** — Subscribe to a store. Uses `useSyncExternalStore` for React 18 compatibility.
 - **`useDevtools(store)`** — Access `canUndo`, `canRedo`, `undo`, `redo` for stores enhanced with `withDevtools`.
 
-## Documentation
+## GitHub
 
-Full docs and examples: [GitHub - Nam1001/React-Flux](https://github.com/Nam1001/React-Flux)
+[https://github.com/Nam1001/React-Flux](https://github.com/Nam1001/React-Flux)
 
 ## License
 
