@@ -5,6 +5,7 @@
         "url": "https://github.com/Nam1001/React-Flux.git"
     },
     "version": "1.0.3",
+    "license": "MIT",
     "files": [
         "dist",
         "README.md",
