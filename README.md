@@ -13,6 +13,8 @@ A fast, minimal-boilerplate React state management library with first-class asyn
 [![Core size](https://img.shields.io/badge/core-1.4KB-success)]()
 [![Tests](https://img.shields.io/badge/tests-998%20passing-success)]()
 
+**GitHub:** [https://github.com/Nam1001/React-Flux](https://github.com/Nam1001/React-Flux)
+
 ---
 
 ## Why Storve?
