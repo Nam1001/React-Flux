@@ -5,6 +5,10 @@
         "url": "https://github.com/Nam1001/React-Flux.git"
     },
     "version": "1.0.2",
+    "files": [
+        "dist",
+        "README.md"
+    ],
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
     "types": "dist/index.d.ts",
@@ -17,6 +21,7 @@
     },
     "scripts": {
         "build": "rollup -c",
+        "prepack": "rm -f dist/index.cjs.js dist/index.cjs.js.map dist/index.esm.js dist/index.esm.js.map",
         "test": "vitest run --coverage && npx tsx benchmarks/week3.ts",
         "test:watch": "vitest --coverage",
         "test:coverage": "vitest run --coverage",
