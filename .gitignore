@@ -6,5 +6,8 @@ coverage
 # Demo app
 apps/todo/dist
 
+# Rollup bundle analyzer output
+stats.html
+
 # Claude/Cursor worktrees
 .claude

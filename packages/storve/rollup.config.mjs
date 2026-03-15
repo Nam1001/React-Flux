@@ -23,13 +23,13 @@ export default {
             dir: 'dist',
             format: 'es',
             entryFileNames: '[name].mjs',
-            sourcemap: true,
+            sourcemap: false,
         },
         {
             dir: 'dist',
             format: 'cjs',
             entryFileNames: '[name].cjs',
-            sourcemap: true,
+            sourcemap: false,
         },
     ],
     plugins: [
@@ -39,6 +39,6 @@ export default {
             declarationDir: 'dist',
         }),
         terser(),
-        analyze && visualizer({ filename: 'dist/stats.html', gzipSize: true }),
+        analyze && visualizer({ filename: 'stats.html', gzipSize: true }),
     ].filter(Boolean),
 };

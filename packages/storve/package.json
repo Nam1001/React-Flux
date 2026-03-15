@@ -5,6 +5,11 @@
         "url": "https://github.com/Nam1001/React-Flux.git"
     },
     "version": "1.0.2",
+    "files": [
+        "dist",
+        "README.md",
+        "LICENSE"
+    ],
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
     "types": "dist/index.d.ts",
@@ -74,7 +79,8 @@
         "bench:week5": "npx tsx benchmarks/week5.ts",
         "lint": "eslint src --ext .ts",
         "build": "rollup -c",
-        "build:analyze": "rollup -c --environment ANALYZE:true"
+        "build:analyze": "rollup -c --environment ANALYZE:true",
+        "prepack": "rm -f dist/index.cjs.js dist/index.cjs.js.map dist/index.esm.js dist/index.esm.js.map dist/stats.html"
     },
     "devDependencies": {
         "@rollup/plugin-terser": "^0.4.4",
