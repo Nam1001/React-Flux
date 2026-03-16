@@ -1,4 +1,5 @@
 export * from './types'
 export { useStore } from './useStore'
 export { useDevtools } from './useDevtools'
+export { useSignal } from '@storve/core/signals'
 export type { Selector } from './types'
