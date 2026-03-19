@@ -3,6 +3,7 @@
   "version": "0.4.0",
   "private": true,
   "scripts": {
+    "sync:readme": "cp README.md packages/storve/README.md && cp README.md packages/storve-react/README.md",
     "build": "pnpm -r run build",
     "size:check": "pnpm build && npx tsx scripts/size-check.ts",
     "test": "pnpm -r run test",
