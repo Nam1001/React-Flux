@@ -177,14 +177,14 @@ describe('withPersist', () => {
       }
     })
 
-    it('debounce: write does not fire immediately when debounce > 0', async () => {
+    it('debounce: leading write fires immediately on first change', async () => {
       const adapter = memoryAdapter()
       const store = withPersist(createStore({ count: 0 }), { key: 'test', adapter, debounce: 100 })
       await store.hydrated
       
       store.setState({ count: 1 })
       const raw = await adapter.getItem('test')
-      expect(raw).toBeNull() // not written yet
+      expect(raw).toContain('"count":1')
     })
 
     it('debounce: write fires after debounce delay elapses', async () => {
@@ -199,7 +199,7 @@ describe('withPersist', () => {
       expect(raw).toContain('"count":1')
     })
 
-    it('debounce: multiple rapid setStates result in only one write', async () => {
+    it('debounce: rapid setStates coalesce to leading + trailing writes', async () => {
       const adapter = memoryAdapter()
       const spy = vi.spyOn(adapter, 'setItem')
       const store = withPersist(createStore({ count: 0 }), { key: 'test', adapter, debounce: 100 })
@@ -214,7 +214,7 @@ describe('withPersist', () => {
       store.setState({ count: 3 })
       vi.advanceTimersByTime(100)
       
-      expect(spy).toHaveBeenCalledTimes(1)
+      expect(spy).toHaveBeenCalledTimes(2)
       const raw = await adapter.getItem('test')
       expect(raw).toContain('"count":3')
     })
@@ -352,6 +352,109 @@ describe('withPersist', () => {
       
       store.setState({ a: 5 })
       expect(store.getState()).toEqual({ a: 5 })
+    })
+  })
+
+  describe('Storve v1.1.2 — withPersist burst debounce', () => {
+    it('withPersist — batch burst writes at most leading + trailing', async () => {
+      const writeLog: string[] = []
+
+      const adapter = {
+        getItem: async () => null,
+        setItem: async (_key: string, val: string) => { writeLog.push(val) },
+        removeItem: async () => {},
+      }
+
+      const store = withPersist(
+        createStore({ count: 0 }),
+        { key: 'test', adapter, debounce: 100 }
+      )
+      await store.hydrated
+
+      store.batch(() => {
+        for (let i = 1; i <= 20; i++) {
+          store.setState({ count: i })
+        }
+      })
+
+      await vi.runAllTimersAsync()
+
+      expect(writeLog.length).toBeLessThanOrEqual(2)
+
+      const final = JSON.parse(writeLog[writeLog.length - 1])
+      expect(final.count).toBe(20)
+    })
+
+    it('withPersist — 1000 rapid setState calls produce ≤ 2 writes', async () => {
+      let writeCount = 0
+
+      const adapter = {
+        getItem: async () => null,
+        setItem: async () => { writeCount++ },
+        removeItem: async () => {},
+      }
+
+      const store = withPersist(
+        createStore({ count: 0 }),
+        { key: 'test', adapter, debounce: 100 }
+      )
+      await store.hydrated
+
+      for (let i = 0; i < 1000; i++) {
+        store.setState({ count: i })
+      }
+
+      await vi.runAllTimersAsync()
+      expect(writeCount).toBeLessThanOrEqual(2)
+    })
+
+    it('withPersist — two separate bursts each write correctly', async () => {
+      const writeLog: number[] = []
+
+      const adapter = {
+        getItem: async () => null,
+        setItem: async (_: string, val: string) => {
+          writeLog.push(JSON.parse(val).count)
+        },
+        removeItem: async () => {},
+      }
+
+      const store = withPersist(
+        createStore({ count: 0 }),
+        { key: 'test', adapter, debounce: 100 }
+      )
+      await store.hydrated
+
+      for (let i = 1; i <= 10; i++) store.setState({ count: i })
+      await vi.advanceTimersByTimeAsync(200)
+
+      for (let i = 11; i <= 20; i++) store.setState({ count: i })
+      await vi.advanceTimersByTimeAsync(200)
+
+      expect(writeLog.length).toBeLessThanOrEqual(4)
+      expect(writeLog[writeLog.length - 1]).toBe(20)
+    })
+
+    it('withPersist debounce:0 — every setState writes immediately', async () => {
+      let writeCount = 0
+
+      const adapter = {
+        getItem: async () => null,
+        setItem: async () => { writeCount++ },
+        removeItem: async () => {},
+      }
+
+      const store = withPersist(
+        createStore({ count: 0 }),
+        { key: 'test', adapter, debounce: 0 }
+      )
+      await store.hydrated
+
+      store.setState({ count: 1 })
+      store.setState({ count: 2 })
+      store.setState({ count: 3 })
+
+      expect(writeCount).toBe(3)
     })
   })
 })

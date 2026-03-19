@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { createStore } from '../../src/store'
 import { compose } from '../../src/compose'
 import { withPersist } from '../../src/persist/index'
+import { withDevtools } from '../../src/devtools/withDevtools'
 import { memoryAdapter } from '../../src/persist/adapters/memory'
 import { localStorageAdapter } from '../../src/persist/adapters/localStorage'
 
@@ -182,7 +183,7 @@ describe('Persist Integration', () => {
   })
 
   describe('Debounce integration', () => {
-    it('rapid setStates result in single adapter write (use vi.useFakeTimers)', async () => {
+    it('rapid setStates coalesce to leading + trailing writes (use vi.useFakeTimers)', async () => {
       const adapter = memoryAdapter()
       const store = withPersist(createStore({ count: 0 }), { key: 'a', adapter, debounce: 100 })
       await store.hydrated
@@ -196,7 +197,7 @@ describe('Persist Integration', () => {
       store.setState({ count: 3 })
       vi.advanceTimersByTime(100)
       
-      expect(spySet).toHaveBeenCalledTimes(1)
+      expect(spySet).toHaveBeenCalledTimes(2)
     })
 
     it('adapter write contains the latest state, not an intermediate one', async () => {
@@ -253,6 +254,40 @@ describe('Persist Integration', () => {
       const store = withPersist(createStore({ num: 10 }), { key: 'ssr-key', adapter, debounce: 0 })
       await expect(store.hydrated).resolves.toBeUndefined()
       expect(store.getState()).toEqual({ num: 10 })
+    })
+  })
+
+  describe('Storve v1.1.2 — withPersist + withDevtools', () => {
+    it('withPersist + withDevtools — 500 setState/sec, no data loss', async () => {
+      let writeCount = 0
+      let lastWrittenState: { ticks?: number } | null = null
+
+      const adapter = {
+        getItem: async () => null,
+        setItem: async (_: string, val: string) => {
+          writeCount++
+          lastWrittenState = JSON.parse(val)
+        },
+        removeItem: async () => {},
+      }
+
+      const store = compose(
+        createStore({ ticks: 0 }),
+        s => withPersist(s, { key: 'test', adapter, debounce: 500 }),
+        s => withDevtools(s, { name: 'test', maxHistory: 100 })
+      )
+      await store.hydrated
+
+      for (let i = 1; i <= 20; i++) {
+        store.setState({ ticks: i })
+      }
+
+      await vi.runAllTimersAsync()
+
+      expect(writeCount).toBeLessThanOrEqual(2)
+      expect(lastWrittenState?.ticks).toBe(20)
+      expect(store.canUndo).toBe(true)
+      expect(typeof store.undo).toBe('function')
     })
   })
 })

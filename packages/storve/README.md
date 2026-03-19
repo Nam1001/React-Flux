@@ -661,6 +661,9 @@ const store = withPersist(
 await store.hydrated
 ```
 
+> **Note:** For stores that receive high-frequency updates (>10 setState/sec), use a higher debounce value or `memoryAdapter()` to avoid write pressure:
+> `withPersist(store, { adapter: indexedDBAdapter(), debounce: 2000 })`
+
 ### Adapters
 
 Storve comes with several built-in adapters, all SSR-safe:

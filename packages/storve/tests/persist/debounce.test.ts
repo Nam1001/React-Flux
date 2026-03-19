@@ -18,74 +18,65 @@ describe('createDebounce', () => {
     expect(fn).toHaveBeenCalledWith('a', 'b')
   })
 
-  it('does not call fn before the delay has elapsed', () => {
+  it('leading: first call fires immediately', () => {
     const fn = vi.fn()
     const debounced = createDebounce(fn, 100)
-    
-    debounced()
-    expect(fn).not.toHaveBeenCalled()
-    
-    vi.advanceTimersByTime(50)
-    expect(fn).not.toHaveBeenCalled()
+    debounced('a')
+    expect(fn).toHaveBeenCalledTimes(1)
+    expect(fn).toHaveBeenCalledWith('a')
   })
 
-  it('calls fn after the delay has elapsed', () => {
+  it('single call: leading fires, trailing skipped (no duplicate)', () => {
     const fn = vi.fn()
     const debounced = createDebounce(fn, 100)
-    
-    debounced()
+    debounced('same')
     vi.advanceTimersByTime(100)
     expect(fn).toHaveBeenCalledTimes(1)
+    expect(fn).toHaveBeenCalledWith('same')
   })
 
-  it('resets the timer when called again before delay elapses — only fires once', () => {
+  it('burst: leading fires, trailing fires with final state', () => {
     const fn = vi.fn()
     const debounced = createDebounce(fn, 100)
-    
-    debounced()
+    debounced('first')
     vi.advanceTimersByTime(50)
-    
-    debounced()
+    debounced('second')
     vi.advanceTimersByTime(50)
-    expect(fn).not.toHaveBeenCalled() // 100ms hasn't passed since second call
-    
+    expect(fn).not.toHaveBeenCalledTimes(2)
     vi.advanceTimersByTime(50)
-    expect(fn).toHaveBeenCalledTimes(1)
+    expect(fn).toHaveBeenCalledTimes(2)
+    expect(fn).toHaveBeenNthCalledWith(1, 'first')
+    expect(fn).toHaveBeenNthCalledWith(2, 'second')
   })
 
   it('passes arguments correctly to the debounced fn', () => {
     const fn = vi.fn()
     const debounced = createDebounce(fn, 100)
-    
     debounced(1, 'two', true)
     vi.advanceTimersByTime(100)
     expect(fn).toHaveBeenCalledWith(1, 'two', true)
   })
 
-  it('passes the most recent arguments when called multiple times before delay', () => {
+  it('burst: leading + trailing with most recent args', () => {
     const fn = vi.fn()
     const debounced = createDebounce(fn, 100)
-    
     debounced('first')
     vi.advanceTimersByTime(50)
     debounced('second')
     vi.advanceTimersByTime(100)
-    
-    expect(fn).toHaveBeenCalledTimes(1)
-    expect(fn).toHaveBeenCalledWith('second')
+    expect(fn).toHaveBeenCalledTimes(2)
+    expect(fn).toHaveBeenNthCalledWith(1, 'first')
+    expect(fn).toHaveBeenNthCalledWith(2, 'second')
   })
 
-  it('calls fn exactly once even after multiple rapid calls', () => {
+  it('rapid calls: leading + trailing coalesce to 2 writes', () => {
     const fn = vi.fn()
     const debounced = createDebounce(fn, 100)
-    
-    for (let i = 0; i < 10; i++) {
-      debounced(i)
-    }
-    
+    for (let i = 0; i < 10; i++) debounced(i)
     vi.advanceTimersByTime(100)
-    expect(fn).toHaveBeenCalledTimes(1)
-    expect(fn).toHaveBeenCalledWith(9)
+    expect(fn).toHaveBeenCalledTimes(2)
+    expect(fn).toHaveBeenNthCalledWith(1, 0)
+    expect(fn).toHaveBeenNthCalledWith(2, 9)
   })
 
   it('multiple independent debounced functions do not interfere with each other', () => {
@@ -104,18 +95,63 @@ describe('createDebounce', () => {
     expect(fn2).toHaveBeenCalledWith('b')
   })
 
-  it('fn is not called after component unmounts (i.e. if timer is pending and never resolves)', () => {
+  it('clearing timers cancels trailing (leading already fired)', () => {
     const fn = vi.fn()
     const debounced = createDebounce(fn, 100)
-    
-    debounced()
-    
-    // In actual usage, if the timeout is cleared or the environment is destroyed,
-    // the fn won't be called. Wait, createDebounce might not export a cancel method.
-    // Vitest lets us clear all timers to simulate unmounting discarding pending timeouts.
+    debounced('x')
+    expect(fn).toHaveBeenCalledTimes(1)
     vi.clearAllTimers()
-    
     vi.advanceTimersByTime(100)
-    expect(fn).not.toHaveBeenCalled()
+    expect(fn).toHaveBeenCalledTimes(1)
+  })
+
+  describe('Storve v1.1.2 — debounce aggressive', () => {
+    it('debounce — first call fires immediately', () => {
+      const writes: number[] = []
+      const debounced = createDebounce((v: number) => writes.push(v), 100)
+
+      debounced(1)
+      expect(writes).toEqual([1])
+    })
+
+    it('debounce — burst produces leading + one trailing write', () => {
+      const writes: number[] = []
+      const debounced = createDebounce((v: number) => writes.push(v), 100)
+
+      debounced(1)
+      debounced(2)
+      debounced(3)
+      debounced(4)
+
+      expect(writes).toEqual([1])
+
+      vi.advanceTimersByTime(100)
+      expect(writes).toEqual([1, 4])
+    })
+
+    it('debounce — single call fires exactly once', () => {
+      const writes: number[] = []
+      const debounced = createDebounce((v: number) => writes.push(v), 100)
+
+      debounced(42)
+      vi.advanceTimersByTime(200)
+
+      expect(writes.length).toBe(1)
+      expect(writes[0]).toBe(42)
+    })
+
+    it('debounce — trailing write has final state not intermediate', () => {
+      const writes: string[] = []
+      const debounced = createDebounce((v: string) => writes.push(v), 100)
+
+      debounced('a')
+      debounced('b')
+      debounced('c')
+      debounced('final')
+
+      vi.advanceTimersByTime(100)
+
+      expect(writes[writes.length - 1]).toBe('final')
+    })
   })
 })

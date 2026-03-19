@@ -85,8 +85,8 @@ importers:
   packages/storve-react:
     dependencies:
       '@storve/core':
-        specifier: 1.1.0
-        version: 1.1.0(immer@11.1.4)(react@18.3.1)
+        specifier: workspace:*
+        version: link:../storve
     devDependencies:
       '@testing-library/jest-dom':
         specifier: ^6.9.1
@@ -784,12 +784,6 @@ packages:
 
   '@sinclair/typebox@0.27.10':
     resolution: {integrity: sha512-MTBk/3jGLNB2tVxv6uLlFh1iu64iYOQ2PbdOSK3NW8JZsmlaOh2q6sdtKowBhfw8QFLmYNzTW4/oK4uATIi6ZA==}
-
-  '@storve/core@1.1.0':
-    resolution: {integrity: sha512-rSFamtEPdymYg9PT/RC15gYjBzbFe9wy6Fmp2ov/lRILxzda/xeVcMExpzAfGwo0XKBI8+4raNNq3rtrx3WdRQ==}
-    peerDependencies:
-      immer: '>=10.0.0'
-      react: '>=18.0.0'
 
   '@testing-library/dom@10.4.1':
     resolution: {integrity: sha512-o4PXJQidqJl82ckFaXUeoAW+XysPLauYI43Abki5hABd853iMhitooc6znOnczgbTYmEP6U6/y1ZyKAIsvMKGg==}
@@ -2771,11 +2765,6 @@ snapshots:
     optional: true
 
   '@sinclair/typebox@0.27.10': {}
-
-  '@storve/core@1.1.0(immer@11.1.4)(react@18.3.1)':
-    dependencies:
-      immer: 11.1.4
-      react: 18.3.1
 
   '@testing-library/dom@10.4.1':
     dependencies:

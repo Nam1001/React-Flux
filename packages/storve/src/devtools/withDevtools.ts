@@ -37,36 +37,14 @@ type StoreWithDevtools<S extends object> = Store<S> & {
     snapshots?: readonly string[];
 }
 
-
-/**
- * Wraps a store definition with DevTools capabilities.
- * Must be imported to register the devtools extension.
- */
-export function withDevtools<D extends object>(
-    definition: D,
-    options: DevtoolsOptions
-): D {
-    DEVTOOLS_OPTIONS.set(definition, options);
-    return definition;
+/** @internal Detect if value is a store (has getState) vs a definition object */
+function isStore(obj: unknown): obj is Store<object> {
+    return obj !== null && typeof obj === 'object' && 'getState' in obj && typeof (obj as Store<object>).getState === 'function';
 }
 
-// Register the extension via the registry pattern
-registerExtension({
-    key: 'devtools',
-    processDefinition: (definition) => {
-        const options = DEVTOOLS_OPTIONS.get(definition);
-        if (!options || options.enabled === false) return { state: {} };
-
-        return {
-            state: {},
-        };
-    },
-    extendStore: (context) => {
-        const { store, definition } = context as { store: Store<object>; definition: object };
-        const options = DEVTOOLS_OPTIONS.get(definition);
-        if (!options || options.enabled === false) return {};
-
-        const initialState = store.getState();
+/** @internal Apply devtools to an existing store. Used for both registry and store-first API. */
+function applyDevtoolsToStore<S extends object>(store: Store<S>, options: DevtoolsOptions): Store<S> & StoreWithDevtools<S> {
+    const initialState = store.getState();
         const internals: DevtoolsInternals<object> = {
             buffer: createRingBuffer<object>(options.maxHistory || 50),
             snapshots: createSnapshotMap<object>(),
@@ -134,7 +112,7 @@ registerExtension({
             connectReduxDevtools(devStore as Required<StoreWithDevtools<object>>, options.name);
         }
 
-        return {
+        const methods = {
             undo: () => {
                 const { buffer, state } = undo(internals.buffer);
                 if (state) {
@@ -149,15 +127,8 @@ registerExtension({
                     internals._applySnapshot(state);
                 }
             },
-            get canUndo() {
-                return canUndo(internals.buffer);
-            },
-            get canRedo() {
-                return canRedo(internals.buffer);
-            },
             snapshot: (name: string) => {
                 internals.snapshots = saveSnapshot(internals.snapshots, name, store.getState());
-                // We use an internal update to trigger subscribers without pushing to history
                 internals._isInternalUpdate = true;
                 store.setState({} as unknown as Partial<StoreState<object>>);
                 internals._isInternalUpdate = false;
@@ -167,8 +138,6 @@ registerExtension({
                 if (!entry) {
                     throw new Error(`Storve DevTools: Snapshot "${name}" not found.`);
                 }
-                
-                // restore() DOES push to history
                 internals._applySnapshot(entry.state);
                 internals.buffer = push(internals.buffer, entry.state, `restore('${name}')`);
             },
@@ -184,13 +153,51 @@ registerExtension({
                 store.setState({} as unknown as Partial<StoreState<object>>);
                 internals._isInternalUpdate = false;
             },
-            get history() {
-                return [...internals.buffer.entries];
-            },
-            get snapshots() {
-                return listSnapshots(internals.snapshots);
-            }
         };
+
+        Object.defineProperties(store, {
+            ...Object.getOwnPropertyDescriptors(methods),
+            canUndo: { get: () => canUndo(internals.buffer), enumerable: true, configurable: true },
+            canRedo: { get: () => canRedo(internals.buffer), enumerable: true, configurable: true },
+            history: { get: () => [...internals.buffer.entries], enumerable: true, configurable: true },
+            snapshots: { get: () => listSnapshots(internals.snapshots), enumerable: true, configurable: true },
+        });
+
+        return store as Store<S> & StoreWithDevtools<S>;
+}
+
+/**
+ * Wraps a store or definition with DevTools capabilities.
+ * Supports both store-first (withDevtools(createStore(...), options)) and
+ * definition-first (createStore(withDevtools({...}, options))) patterns.
+ */
+export function withDevtools<D extends object>(store: Store<D>, options: DevtoolsOptions): Store<D>;
+export function withDevtools<D extends object>(definition: D, options: DevtoolsOptions): D;
+export function withDevtools<D extends object>(
+    storeOrDef: Store<D> | D,
+    options: DevtoolsOptions
+): Store<D> | D {
+    if (isStore(storeOrDef)) {
+        return applyDevtoolsToStore(storeOrDef as Store<object>, options) as Store<D>;
+    }
+    DEVTOOLS_OPTIONS.set(storeOrDef, options);
+    return storeOrDef;
+}
+
+// Register the extension via the registry pattern (definition-first)
+registerExtension({
+    key: 'devtools',
+    processDefinition: (definition) => {
+        const options = DEVTOOLS_OPTIONS.get(definition);
+        if (!options || options.enabled === false) return { state: {} };
+        return { state: {} };
+    },
+    extendStore: (context) => {
+        const { store, definition } = context as { store: Store<object>; definition: object };
+        const options = DEVTOOLS_OPTIONS.get(definition);
+        if (!options || options.enabled === false) return {};
+        applyDevtoolsToStore(store, options);
+        return {};
     }
 });
 
