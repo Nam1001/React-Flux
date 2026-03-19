@@ -409,7 +409,8 @@ store.getState().user === {
 ```ts
 createAsync(fn, {
   ttl: 60_000,               // cache result for 60 seconds (default: 0 = no cache)
-  staleWhileRevalidate: true // show stale data while fetching fresh (default: false)
+  staleWhileRevalidate: true, // show stale data while fetching fresh (default: false)
+  maxCacheSize: 3            // LRU eviction — keep only N most recent entries (default: undefined = no limit)
 })
 ```
 
