@@ -22,7 +22,7 @@ export default defineConfig({
         lines: 85,
       },
       include: ['src/**/*.ts', 'src/**/*.tsx'],
-      exclude: ['src/types.ts'],
+      exclude: ['src/types.ts', 'src/**/*.d.ts'],
     },
   },
 })

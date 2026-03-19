@@ -30,7 +30,7 @@
         "lint": "eslint src --ext .ts,.tsx"
     },
     "dependencies": {
-        "@storve/core": "1.1.1"
+        "@storve/core": "workspace:*"
     },
     "peerDependencies": {
         "react": ">=18.0.0"

@@ -13,7 +13,6 @@ A fast, minimal-boilerplate React state management library with first-class asyn
 [![Core size](https://img.shields.io/badge/core-1.4KB-success)]()
 [![Tests](https://img.shields.io/badge/tests-998%20passing-success)]()
 
-
 ---
 
 ## Why Storve?
@@ -135,7 +134,7 @@ Storve uses subpath imports so you only bundle what you use:
 
 | Import | Size (gzipped) | Use when |
 |--------|----------------|----------|
-| `import { createStore, batch } from '@storve/core'` | ~1.4 KB | Core store only |
+| `import { createStore, batch, compose } from '@storve/core'` | ~1.4 KB | Core store, enhancer composition |
 | `import { createAsync } from '@storve/core/async'` | +1.1 KB | Async state, fetching, caching |
 | `import { computed } from '@storve/core/computed'` | +0.8 KB | Derived state |
 | `import { withPersist } from '@storve/core/persist'` | +1.2 KB | Persistence, adapters |
@@ -662,6 +661,9 @@ const store = withPersist(
 await store.hydrated
 ```
 
+> **Note:** For stores that receive high-frequency updates (>10 setState/sec), use a higher debounce value or `memoryAdapter()` to avoid write pressure:
+> `withPersist(store, { adapter: indexedDBAdapter(), debounce: 2000 })`
+
 ### Adapters
 
 Storve comes with several built-in adapters, all SSR-safe:
@@ -680,11 +682,32 @@ import { createStore } from '@storve/core'
 import { withPersist } from '@storve/core/persist'
 import { localStorageAdapter } from '@storve/core/persist/adapters/localStorage'
 
-const store = withPersist({ 
-  key: 'app', 
-  adapter: localStorageAdapter() 
+const store = withPersist({
+  key: 'app',
+  adapter: localStorageAdapter()
 })(createStore({ count: 0 }))
 ```
+
+### `compose(store, ...enhancers)`
+
+Pipes a store through one or more enhancer functions left-to-right. Use it when combining multiple enhancers (persist + devtools + sync) in a single store.
+
+```ts
+import { createStore, compose } from '@storve/core'
+import { withPersist } from '@storve/core/persist'
+import { localStorageAdapter } from '@storve/core/persist/adapters/localStorage'
+import { withDevtools } from '@storve/core/devtools'
+import { withSync } from '@storve/core/sync'
+
+const store = compose(
+  createStore({ count: 0, theme: 'light' }),
+  s => withPersist(s, { key: 'app', adapter: localStorageAdapter() }),
+  s => withDevtools(s, { name: 'My Store' }),
+  s => withSync(s, { channel: 'my-app', keys: ['theme'] })
+)
+```
+
+Enhancers are applied left-to-right: the output of each becomes the input of the next. With no enhancers, `compose(store)` returns the store unchanged.
 
 ---
 

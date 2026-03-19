@@ -31,6 +31,8 @@ A fast, minimal-boilerplate React state management library with first-class asyn
 
 ## Installation
 
+**Storve has two packages — install both for React apps:**
+
 ```bash
 # npm
 npm install @storve/core @storve/react
@@ -93,8 +95,6 @@ userStore.getState().user.status // 'success'
 That's it. No actions, reducers, or providers needed.
 
 ➡️ *StackBlitz demo coming soon*
-
----
 
 ---
 
@@ -663,6 +663,9 @@ const store = withPersist(
 await store.hydrated
 ```
 
+> **Note:** For stores that receive high-frequency updates (>10 setState/sec), use a higher debounce value or `memoryAdapter()` to avoid write pressure:
+> `withPersist(store, { adapter: indexedDBAdapter(), debounce: 2000 })`
+
 ### Adapters
 
 Storve comes with several built-in adapters, all SSR-safe:
@@ -872,8 +875,6 @@ const store = withSync(
 - **Selective Sync**: Use the `keys` option to only broadcast specific parts of your state, reducing overhead.
 - **Conflict-Free**: Built on a simple last-write-wins protocol via `BroadcastChannel`.
 - **Zero Configuration**: Works out of the box with no complex setup required.
-
----
 
 ---
 

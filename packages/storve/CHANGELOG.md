@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.2] - 2026-03-19
+
+### Fixed
+- **withDevtools store-first API**: `withDevtools(createStore(...), options)` now correctly attaches `undo`, `redo`, `canUndo`, and `canRedo`. Previously only the definition-first pattern worked; the documented store-first pattern (used with `compose`) was broken because the registry ran before the store was wrapped.
+- **withPersist burst writes**: Replaced trailing-only debounce with leading+trailing. Rapid `setState` calls within a single task (e.g. inside `batch()`) no longer flood the persistence layer — at most 2 writes (leading + trailing) instead of N. Added trailing guard to skip duplicate write when args unchanged.
+
+### Changed
+- README: Added note for high-frequency stores recommending higher debounce or `memoryAdapter()`.
+
 ## [1.0.0] - 2026-03-14
 
 ### Added
