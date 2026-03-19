@@ -1,7 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { Store } from '../src/types';
 import { createStore } from '../src/store';
+import { compose } from '../src/compose';
 import { withDevtools } from '../src/devtools/withDevtools';
+import { withPersist } from '../src/persist/index';
+import { memoryAdapter } from '../src/persist/adapters/memory';
 import {
     createRingBuffer, push, undo, redo, canUndo, canRedo,
     type HistoryEntry
@@ -490,6 +493,19 @@ describe('withDevtools — store integration', () => {
         it('starts with empty history', () => {
             const store = makeStore();
             expect(historyOf(store)).toHaveLength(0);
+        });
+
+        it('compose + withPersist + withDevtools store-first — StockSim pattern', async () => {
+            const store = compose(
+                createStore({ trades: [] as Array<{ id: string }> }),
+                (s) => withPersist(s, { key: 'test', adapter: memoryAdapter() }),
+                (s) => withDevtools(s, { name: 'test' })
+            );
+            await store.hydrated;
+            store.setState({ trades: [{ id: '1' }] });
+            store.setState({ trades: [{ id: '1' }, { id: '2' }] });
+            expect(store.canUndo).toBe(true);
+            expect(typeof store.undo).toBe('function');
         });
     });
 
@@ -1035,5 +1051,199 @@ describe('Edge Cases & Stress', () => {
         (h as unknown as Array<HistoryEntry<object>>).push({ state: { count: 999 }, timestamp: 0, actionName: 'injected' });
         // Internal buffer should be unaffected
         expect(historyOf(store)).toHaveLength(1);
+    });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 6. Storve v1.1.2 — withDevtools aggressive
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('Storve v1.1.2 — withDevtools aggressive', () => {
+
+    describe('Basic correctness — dual signature', () => {
+        it('withDevtools(store) — undo/redo methods attached', () => {
+            const store = withDevtools(createStore({ count: 0 }), { name: 'test' });
+            expect(typeof store.undo).toBe('function');
+            expect(typeof store.redo).toBe('function');
+            expect(typeof store.canUndo).toBe('boolean');
+            expect(typeof store.canRedo).toBe('boolean');
+        });
+
+        it('withDevtools(definition) — existing pattern unchanged', () => {
+            const store = createStore(withDevtools({ count: 0 }, { name: 'test' }));
+            expect(typeof store.undo).toBe('function');
+            expect(typeof store.canUndo).toBe('boolean');
+        });
+
+        it('withDevtools — store-first and definition-first behave identically', () => {
+            const s1 = withDevtools(createStore({ count: 0 }), { name: 'a' });
+            const s2 = createStore(withDevtools({ count: 0 }, { name: 'b' }));
+
+            s1.setState({ count: 1 });
+            s2.setState({ count: 1 });
+
+            expect(s1.canUndo).toBe(s2.canUndo);
+            expect(s1.canRedo).toBe(s2.canRedo);
+
+            s1.undo();
+            s2.undo();
+
+            expect(s1.getState().count).toBe(s2.getState().count);
+        });
+    });
+
+    describe('Undo/redo correctness', () => {
+        it('canUndo is false on fresh store', () => {
+            const store = withDevtools(createStore({ count: 0 }), { name: 'test' });
+            expect(store.canUndo).toBe(false);
+        });
+
+        it('canUndo is true after two setStates', () => {
+            const store = withDevtools(createStore({ count: 0 }), { name: 'test' });
+            store.setState({ count: 1 });
+            store.setState({ count: 2 });
+            expect(store.canUndo).toBe(true);
+        });
+
+        it('undo restores state correctly', () => {
+            const store = withDevtools(createStore({ count: 0 }), { name: 'test' });
+            store.setState({ count: 1 });
+            store.setState({ count: 2 });
+            store.undo();
+            expect(store.getState().count).toBe(1);
+        });
+
+        it('redo after undo restores state', () => {
+            const store = withDevtools(createStore({ count: 0 }), { name: 'test' });
+            store.setState({ count: 1 });
+            store.undo();
+            store.redo();
+            expect(store.getState().count).toBe(1);
+        });
+
+        it('canRedo clears after new setState', () => {
+            const store = withDevtools(createStore({ count: 0 }), { name: 'test' });
+            store.setState({ count: 1 });
+            store.setState({ count: 2 });
+            store.undo();
+            expect(store.canRedo).toBe(true);
+            store.setState({ count: 99 });
+            expect(store.canRedo).toBe(false);
+        });
+
+        it('undo at history start is a no-op', () => {
+            const store = withDevtools(createStore({ count: 5 }), { name: 'test' });
+            store.undo();
+            expect(store.getState().count).toBe(5);
+        });
+
+        it('redo at history end is a no-op', () => {
+            const store = withDevtools(createStore({ count: 0 }), { name: 'test' });
+            store.setState({ count: 1 });
+            store.redo();
+            expect(store.getState().count).toBe(1);
+        });
+    });
+
+    describe('Aggressive volume tests', () => {
+        it('undo 1000 times returns to first entry', () => {
+            const store = withDevtools(
+                createStore({ count: 0 }),
+                { name: 'test', maxHistory: 1000 }
+            );
+
+            for (let i = 1; i <= 1000; i++) {
+                store.setState({ count: i });
+            }
+
+            expect(store.getState().count).toBe(1000);
+
+            while (store.canUndo) {
+                store.undo();
+            }
+
+            expect(store.getState().count).toBe(1);
+            expect(store.canUndo).toBe(false);
+        });
+
+        it('ring buffer — oldest entry evicted at maxHistory', () => {
+            const store = withDevtools(
+                createStore({ count: 0 }),
+                { name: 'test', maxHistory: 10 }
+            );
+
+            for (let i = 1; i <= 20; i++) {
+                store.setState({ count: i });
+            }
+
+            let undoCount = 0;
+            while (store.canUndo) {
+                store.undo();
+                undoCount++;
+            }
+
+            expect(undoCount).toBe(9);
+            expect(store.getState().count).toBe(11);
+        });
+
+        it('rapid undo/redo cycling — state stays consistent', () => {
+            const store = withDevtools(
+                createStore({ count: 0 }),
+                { name: 'test', maxHistory: 50 }
+            );
+
+            for (let i = 1; i <= 50; i++) store.setState({ count: i });
+
+            for (let i = 0; i < 500; i++) {
+                if (store.canUndo) store.undo();
+                if (store.canRedo) store.redo();
+            }
+
+            const count = store.getState().count;
+            expect(typeof count).toBe('number');
+            expect(isNaN(count)).toBe(false);
+            expect(count).toBeGreaterThanOrEqual(0);
+            expect(count).toBeLessThanOrEqual(50);
+        });
+
+        it('compose + withDevtools store-first — undo/redo works', async () => {
+            const store = compose(
+                createStore({ trades: [] as string[] }),
+                s => withPersist(s, { key: 'test', adapter: memoryAdapter() }),
+                s => withDevtools(s, { name: 'test' })
+            );
+            await store.hydrated;
+            store.setState(s => ({ trades: [...s.trades, 'trade-1'] }));
+            store.setState(s => ({ trades: [...s.trades, 'trade-2'] }));
+
+            expect(store.getState().trades.length).toBe(2);
+            expect(store.canUndo).toBe(true);
+
+            store.undo();
+            expect(store.getState().trades.length).toBe(1);
+
+            store.undo();
+            expect(store.getState().trades.length).toBe(1);
+
+            expect(store.canUndo).toBe(false);
+            expect(store.canRedo).toBe(true);
+        });
+
+        it('devtools methods not lost after compose with withPersist', async () => {
+            const store = compose(
+                createStore({ value: 0 }),
+                s => withPersist(s, { key: 'test', adapter: memoryAdapter() }),
+                s => withDevtools(s, { name: 'test' })
+            );
+            await store.hydrated;
+
+            expect(typeof store.undo).toBe('function');
+            expect(typeof store.redo).toBe('function');
+            expect(typeof store.canUndo).toBe('boolean');
+            expect(typeof store.canRedo).toBe('boolean');
+            expect(typeof store.snapshot).toBe('function');
+            expect(typeof store.restore).toBe('function');
+            expect(typeof store.clearHistory).toBe('function');
+        });
     });
 });
