@@ -4,7 +4,7 @@
         "type": "git",
         "url": "https://github.com/Nam1001/React-Flux.git"
     },
-    "version": "1.1.0",
+    "version": "1.1.1",
     "license": "MIT",
     "files": [
         "dist",
@@ -56,7 +56,7 @@
             "require": "./dist/adapters/indexedDB.cjs"
         },
         "./signals": {
-            "types": "./dist/signals.d.ts",
+            "types": "./dist/signals/index.d.ts",
             "import": "./dist/signals.mjs",
             "require": "./dist/signals.cjs"
         },

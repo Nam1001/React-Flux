@@ -116,6 +116,16 @@ function Counter() {
 }
 ```
 
+**`useStore` returns state only.** Actions are called directly on the store instance.
+
+```ts
+// State — from the hook (reactive, triggers re-renders)
+const transactions = useStore(transactionsStore, s => s.transactions);
+
+// Actions — from the store instance (not from the hook)
+transactionsStore.addTransaction(newEntry);
+```
+
 ---
 
 ## Import Patterns (Tree-Shaking)
@@ -153,6 +163,20 @@ Storve has two packages:
 
 - **`@storve/core`** — the framework-agnostic core store. Works anywhere: React, Node, tests, vanilla JS.
 - **`@storve/react`** — the React adapter. Provides `useStore` hook built on `useSyncExternalStore`.
+
+---
+
+## Feature Map
+
+| Need | API | Import |
+|------|-----|--------|
+| Create a store | `createStore` | `@storve/core` |
+| Read state in React | `useStore(store, selector?)` | `@storve/react` |
+| Call actions | `store.actionName(...)` | store instance |
+| Fine-grained reactive value | `signal(store, key)` + `useSignal` | `@storve/core/signals`, `@storve/react` |
+| Async (with loading/error) | `createAsync` | `@storve/core/async` |
+| Persist to localStorage | `withPersist` | `@storve/core/persist` |
+| Devtools / time-travel | `useDevtools` | `@storve/react` |
 
 ---
 
@@ -580,6 +604,39 @@ function UserProfile({ id }: { id: string }) {
 
 Storve includes a powerful, tree-shakable persistence layer that automatically syncs your store state to external storage.
 
+### Persist a store to localStorage
+
+Minimal custom pattern (rehydrate on load, save on every change):
+
+```ts
+function persistStore(store, key) {
+  // Rehydrate on load
+  const saved = localStorage.getItem(key);
+  if (saved) store.setState(JSON.parse(saved));
+
+  // Save on every change
+  store.subscribe((state) => {
+    localStorage.setItem(key, JSON.stringify(state));
+  });
+}
+
+// Usage
+persistStore(transactionsStore, 'finance-transactions');
+```
+
+Built-in alternative with `withPersist` (handles hydration and debounced writes):
+
+```ts
+import { createStore } from '@storve/core'
+import { withPersist } from '@storve/core/persist'
+import { localStorageAdapter } from '@storve/core/persist/adapters/localStorage'
+
+const transactionsStore = withPersist(createStore({ transactions: [] }), {
+  key: 'finance-transactions',
+  adapter: localStorageAdapter()
+});
+```
+
 ### `withPersist(store, options)`
 
 Enhances a store with persistence capabilities. It handles hydration (loading state on startup) and automatic debounced writes on state changes.
@@ -697,12 +754,36 @@ function CounterDisplay() {
 
 Signals are perfect for high-frequency updates or deep component trees where you want to avoid overhead from larger selectors.
 
+### Derived value pattern
+
+To create a standalone reactive derived value (e.g. a computed balance), use a small dedicated store and keep it in sync with the source:
+
+```ts
+// Step 1: Create a small store to hold the derived value
+const balanceStore = createStore({ value: 0 });
+const balanceSignal = signal(balanceStore, 'value');
+
+// Step 2: Subscribe to the source store and keep it in sync
+transactionsStore.subscribe((state) => {
+  const balance = state.transactions.reduce((sum, t) => sum + t.amount, 0);
+  balanceStore.setState({ value: balance });
+});
+
+// Step 3: Use in a React component
+const balance = useSignal(balanceSignal);
+```
+
+*Signals in Storve are views over a store key. For standalone derived values, use a small dedicated store.*
 
 ---
 
 ## DevTools & Time Travel (v0.6)
 
 Storve features a built-in time-travel engine that integrates seamlessly with the Redux DevTools extension. It uses a ring-buffer history to keep memory usage constant while providing powerful undo/redo and snapshot capabilities.
+
+### Undo/Redo
+
+Wrap your store with `withDevtools`; the store instance then gets `undo()`, `redo()`, `canUndo`, and `canRedo`. In React, use `useDevtools(store)` for reactive `canUndo`/`canRedo` and call `store.undo()` / `store.redo()` in your button handlers (see React Integration below).
 
 ### `withDevtools(store, options)`
 
@@ -743,18 +824,18 @@ store.restore('before-expensive-op') // Jumps back instantly
 
 ### React Integration: `useDevtools(store)`
 
-The `useDevtools` hook (from `@storve/react`) provides a reactive way to access history state, useful for building your own Undo/Redo UI.
+The `useDevtools` hook (from `@storve/react`) provides a reactive way to access history state (`canUndo`, `canRedo`, `history`, `snapshots`). Undo/redo actions are called on the store instance, not returned by the hook.
 
 ```tsx
 import { useDevtools } from '@storve/react'
 
 function Controls() {
-  const { canUndo, canRedo, undo, redo } = useDevtools(counterStore)
-  
+  const { canUndo, canRedo } = useDevtools(counterStore)
+
   return (
     <div>
-      <button onClick={undo} disabled={!canUndo}>Undo</button>
-      <button onClick={redo} disabled={!canRedo}>Redo</button>
+      <button onClick={() => counterStore.undo()} disabled={!canUndo}>Undo</button>
+      <button onClick={() => counterStore.redo()} disabled={!canRedo}>Redo</button>
     </div>
   )
 }
