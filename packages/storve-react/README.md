@@ -13,7 +13,7 @@ A fast, minimal-boilerplate React state management library with first-class asyn
 [![Core size](https://img.shields.io/badge/core-1.4KB-success)]()
 [![Tests](https://img.shields.io/badge/tests-998%20passing-success)]()
 
-**GitHub:** [https://github.com/Nam1001/React-Flux](https://github.com/Nam1001/React-Flux)
+**GitHub:** [https://github.com/Nam1001/React-Flux](https://github.com/Nam1001/React-Flux) | **Demo:** [StockSim](https://github.com/Nam1001/Stocksim)
 
 ---
 
@@ -94,7 +94,7 @@ userStore.getState().user.status // 'success'
 
 That's it. No actions, reducers, or providers needed.
 
-➡️ *StackBlitz demo coming soon*
+➡️ **[StockSim Demo](https://github.com/Nam1001/Stocksim)** — A real-time stock market simulator built on Storve
 
 ---
 
