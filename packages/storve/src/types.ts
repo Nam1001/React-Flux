@@ -35,6 +35,8 @@ export interface AsyncOptions {
     ttl?: number;
     /** Enable stale-while-revalidate behavior. Default: false */
     staleWhileRevalidate?: boolean;
+    /** Max cache entries (LRU eviction). Default: undefined (no limit) */
+    maxCacheSize?: number;
 }
 
 /**

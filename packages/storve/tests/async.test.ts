@@ -556,6 +556,86 @@ describe('Async State — Cache & TTL', () => {
 })
 
 // ─────────────────────────────────────────────
+// 5b. maxCacheSize & LRU
+// ─────────────────────────────────────────────
+describe('Async State — maxCacheSize & LRU', () => {
+
+    beforeEach(() => { vi.useFakeTimers({ now: Date.now(), toFake: ['Date', 'setTimeout', 'clearTimeout'] }) })
+    afterEach(() => { vi.useRealTimers() })
+
+    it('maxCacheSize — evicts least recently used', async () => {
+        const fn = vi.fn(async (id: string) => ({ id }))
+        const store = createStore({
+            data: createAsync(fn, { ttl: 60_000, maxCacheSize: 2 })
+        })
+
+        await store.fetch('data', 'a')  // cache: [a]
+        await store.fetch('data', 'b')  // cache: [a, b]
+        await store.fetch('data', 'c')  // cache: [b, c] — a evicted (LRU)
+
+        // a should be gone — next fetch regenerates it
+        await store.fetch('data', 'a')
+        expect(fn).toHaveBeenCalledTimes(4)  // a, b, c, a (regenerated)
+    })
+
+    it('maxCacheSize — access promotes entry', async () => {
+        const fn = vi.fn(async (id: string) => ({ id }))
+        const store = createStore({
+            data: createAsync(fn, { ttl: 60_000, maxCacheSize: 2 })
+        })
+
+        await store.fetch('data', 'a')  // cache: [a]
+        await store.fetch('data', 'b')  // cache: [a, b]
+        await store.fetch('data', 'a')  // cache: [b, a] — a promoted to MRU
+        await store.fetch('data', 'c')  // cache: [a, c] — b evicted (LRU now)
+
+        // b should be regenerated
+        await store.fetch('data', 'b')
+        expect(fn).toHaveBeenCalledTimes(4)  // a, b, a (hit), c, b (regenerated)
+    })
+
+    it('no maxCacheSize — keeps all entries (backward compatible)', async () => {
+        const fn = vi.fn(async (id: string) => ({ id }))
+        const store = createStore({
+            data: createAsync(fn, { ttl: 60_000 })
+        })
+
+        for (let i = 0; i < 20; i++) {
+            await store.fetch('data', `key-${i}`)
+        }
+
+        // refetch key-0 should be cache hit
+        await store.fetch('data', 'key-0')
+        expect(fn).toHaveBeenCalledTimes(20)
+    })
+
+    it('maxCacheSize — cache bounded under 100 fetches (deterministic)', async () => {
+        let callCount = 0
+        const store = createStore({
+            data: createAsync(
+                async (id: string) => {
+                    callCount++
+                    return new Array(1000).fill(id)
+                },
+                { ttl: 60_000, maxCacheSize: 5 }
+            )
+        })
+
+        for (let i = 0; i < 100; i++) {
+            await store.fetch('data', `key-${i}`)
+        }
+
+        // Only last 5 unique keys should be cached. Refetching key-0 (evicted) calls fn again;
+        // refetching key-99 (cached) does not.
+        const callsBefore = callCount
+        await store.fetch('data', 'key-0')   // evicted — fn called again
+        await store.fetch('data', 'key-99')  // cached — fn NOT called again
+
+        expect(callCount).toBe(callsBefore + 1)
+    })
+})
+
+// ─────────────────────────────────────────────
 // 6. STALE-WHILE-REVALIDATE
 // ─────────────────────────────────────────────
 describe('Async State — Stale-While-Revalidate', () => {

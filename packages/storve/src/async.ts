@@ -1,5 +1,6 @@
 import { AsyncValue, AsyncOptions, AsyncState, AsyncStatus, ASYNC_VALUE_MARKER, IAsyncEngine } from './types';
 import { registerExtension } from './registry';
+import { LRUCache } from './async/lru-cache';
 
 /**
  * Creates an async value definition for use in createStore.
@@ -26,7 +27,7 @@ export function createAsync<T, Args extends unknown[] = unknown[]>(
 export class AsyncEngine<T> implements IAsyncEngine<T> {
     private lastRequestId = 0;
     private lastArgs: unknown[] = [];
-    private cache = new Map<string, { data: T; expiresAt: number }>();
+    private cache: LRUCache<{ data: T; expiresAt: number }>;
     private status: AsyncStatus = 'idle';
     private data: T | null = null;
     private error: string | null = null;
@@ -44,7 +45,9 @@ export class AsyncEngine<T> implements IAsyncEngine<T> {
         private fn: (...args: unknown[]) => Promise<T>,
         private options: AsyncOptions,
         private onUpdate: (state: AsyncState<T>) => void
-    ) { }
+    ) {
+        this.cache = new LRUCache<{ data: T; expiresAt: number }>(this.options.maxCacheSize);
+    }
 
     /**
      * Returns the current public state shape for this async key.

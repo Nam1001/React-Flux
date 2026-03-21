@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.3] - 2026-03-19
+
+### Fixed
+- `createAsync`: Added `maxCacheSize` option with LRU eviction to prevent
+  unbounded memory growth when fetching many unique argument combinations.
+  Default is `undefined` (no limit) for backward compatibility.
+  Found via StockSim stress:heavy — 5 large chart ranges accumulated +67MB
+  and caused 70ms GC pauses in the tick engine.
+
 ## [1.1.2] - 2026-03-19
 
 ### Fixed

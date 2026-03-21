@@ -2,7 +2,7 @@
  * A subscribable reference to a single key in a Storve store.
  * Read-only signals (derived) throw a clear error when set() is called.
  */
-export interface Signal<T> {
+interface Signal<T> {
     /** Returns the current value of this signal */
     get(): T;
     /**
@@ -16,5 +16,6 @@ export interface Signal<T> {
     readonly _derived: boolean;
 }
 
+export type { Signal };
 export { signal } from './createSignal';
 export { useSignal } from './useSignal';

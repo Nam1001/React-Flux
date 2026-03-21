@@ -13,6 +13,8 @@ A fast, minimal-boilerplate React state management library with first-class asyn
 [![Core size](https://img.shields.io/badge/core-1.4KB-success)]()
 [![Tests](https://img.shields.io/badge/tests-998%20passing-success)]()
 
+**GitHub:** [https://github.com/Nam1001/React-Flux](https://github.com/Nam1001/React-Flux)
+
 ---
 
 ## Why Storve?
@@ -182,6 +184,8 @@ Storve has two packages:
 
 ## API Reference
 
+**Problem:** Redux requires actions, reducers, and selectors in separate files. Storve lets you define state and updates in one `createStore` call.
+
 ### `createStore(definition, options?)`
 
 Creates a reactive store. Returns a store instance.
@@ -326,6 +330,8 @@ Actions keep business logic in one place instead of scattered across components.
 
 ### `useStore(store, selector?)` *(@storve/react)*
 
+**Problem:** Manual selector writing is often needed to prevent re-renders. Storve's auto-tracking Proxy only re-renders when the selected value actually changes.
+
 React hook to consume a store inside a component. Built on `useSyncExternalStore` — safe in React 18 Concurrent Mode with no tearing.
 
 ```tsx
@@ -351,6 +357,8 @@ function MyComponent() {
 
 ## Computed values (v0.5)
 
+**Problem:** Derived state usually requires manual recalculation or memoization (e.g. `useMemo`, `reselect`). Storve's `computed` automatically tracks dependencies and recomputes only when they change.
+
 Synchronous derived state with automatic dependency tracking. Use `computed(fn)` in your store definition; the store will run the function against the current state, track which keys were read, and recompute when those dependencies change. Supports chaining (computed can depend on other computeds). Circular dependencies are detected at store creation and throw a clear error.
 
 ```ts
@@ -373,6 +381,8 @@ Computed keys are read-only: you cannot set them via `setState` (TypeScript will
 ---
 
 ## Async State
+
+**Problem:** Zustand has no built-in async — you typically need TanStack Query too. There's no built-in caching or stale-while-revalidate. Optimistic updates often require complex middleware. Storve's `createAsync` provides loading, error, caching, SWR, and optimistic updates in one API.
 
 Async data is a first-class citizen in Storve. No separate library needed.
 
@@ -409,7 +419,8 @@ store.getState().user === {
 ```ts
 createAsync(fn, {
   ttl: 60_000,               // cache result for 60 seconds (default: 0 = no cache)
-  staleWhileRevalidate: true // show stale data while fetching fresh (default: false)
+  staleWhileRevalidate: true, // show stale data while fetching fresh (default: false)
+  maxCacheSize: 3            // LRU eviction — keep only N most recent entries (default: undefined = no limit)
 })
 ```
 
@@ -602,6 +613,8 @@ function UserProfile({ id }: { id: string }) {
 
 ## Persistence Layer (v0.4)
 
+**Problem:** Persisting state across reloads usually means manual `localStorage` sync, rehydration on load, and debouncing writes. `withPersist` handles hydration and debounced writes automatically.
+
 Storve includes a powerful, tree-shakable persistence layer that automatically syncs your store state to external storage.
 
 ### Persist a store to localStorage
@@ -668,6 +681,13 @@ await store.hydrated
 
 Storve comes with several built-in adapters, all SSR-safe:
 
+```ts
+import { localStorageAdapter } from '@storve/core/persist/adapters/localStorage'
+import { sessionStorageAdapter } from '@storve/core/persist/adapters/sessionStorage'
+import { memoryAdapter } from '@storve/core/persist/adapters/memory'
+import { indexedDBAdapter } from '@storve/core/persist/adapters/indexedDB'
+```
+
 - **`localStorageAdapter()`**: Persist to `window.localStorage`.
 - **`sessionStorageAdapter()`**: Persist to `window.sessionStorage`.
 - **`indexedDBAdapter()`**: Async persistence to IndexedDB for larger datasets.
@@ -712,6 +732,8 @@ Enhancers are applied left-to-right: the output of each becomes the input of the
 ---
 
 ## Signals (v0.5)
+
+**Problem:** In high-frequency updates or deep component trees, `useStore` selectors can cause overhead. Signals let you subscribe to a single key and pass reactive values around without that overhead.
 
 Signals provide fine-grained reactivity by allowing you to subscribe to a single key in the store. Unlike `useStore` which re-renders if a selector result changes, Signals are lower-level objects that can be passed around and subscribed to directly.
 
@@ -782,6 +804,8 @@ const balance = useSignal(balanceSignal);
 
 ## DevTools & Time Travel (v0.6)
 
+**Problem:** Debugging state changes is difficult without history. Storve's `withDevtools` adds undo/redo and Redux DevTools integration so you can inspect and time-travel through state.
+
 Storve features a built-in time-travel engine that integrates seamlessly with the Redux DevTools extension. It uses a ring-buffer history to keep memory usage constant while providing powerful undo/redo and snapshot capabilities.
 
 ### Undo/Redo
@@ -847,6 +871,8 @@ function Controls() {
 ---
 
 ## Cross-Tab Synchronization (v0.7)
+
+**Problem:** State can diverge across browser tabs. Keeping it consistent usually requires manual event handling. `withSync` uses `BroadcastChannel` to sync state across tabs automatically.
 
 Storve provides an easy way to synchronize state across multiple browser tabs using the `BroadcastChannel` API. This is useful for keeping user preferences, authentication state, or shared data consistent without manual event handling.
 
